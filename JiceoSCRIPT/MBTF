@@ -9,12 +9,11 @@ getgenv().SellInterval = 30
 getgenv().NextSellTime = 0
 getgenv().Skills = {Skill1 = false, Skill2 = false, Skill3 = false, Skill4 = false}
 getgenv().IsSelling = false
-getgenv().AutoKeys = {Z = false, X = false, C = false, V = false}
 getgenv().SpeedEnabled = false
 getgenv().InfJumpEnabled = false
 getgenv().SpeedValue = 50
 getgenv().AutoSellFull = false
-getgenv().FullInventoryThreshold = 60  -- <--- Đổi thành 23 như bạn muốn
+getgenv().FullInventoryThreshold = 60
 
 local plr = game.Players.LocalPlayer
 local playerGui = plr:WaitForChild("PlayerGui")
@@ -203,30 +202,6 @@ task.spawn(function()
     end
 end)
 
--- ==================== TAB AUTO KEYS ====================
-local AutoKeyTab = Window:CreateTab("Auto Keys", 4483345998)
-AutoKeyTab:CreateSection("🎮 Auto Press Keys")
-AutoKeyTab:CreateToggle({
-    Name = "🔴 Auto Z",
-    CurrentValue = false,
-    Callback = function(v) getgenv().AutoKeys.Z = v end
-})
-AutoKeyTab:CreateToggle({
-    Name = "🟠 Auto X",
-    CurrentValue = false,
-    Callback = function(v) getgenv().AutoKeys.X = v end
-})
-AutoKeyTab:CreateToggle({
-    Name = "🟡 Auto C",
-    CurrentValue = false,
-    Callback = function(v) getgenv().AutoKeys.C = v end
-})
-AutoKeyTab:CreateToggle({
-    Name = "🟢 Auto V",
-    CurrentValue = false,
-    Callback = function(v) getgenv().AutoKeys.V = v end
-})
-
 -- ==================== TAB PLAYER ====================
 local PlayerTab = Window:CreateTab("Player", 4483362458)
 PlayerTab:CreateSection("🏃 Movement")
@@ -310,7 +285,7 @@ Main:CreateToggle({
 Main:CreateInput({
     Name = "⏱️ Sell Every (giây)",
     CurrentValue = "30",
-    PlaceholderText = "Nhập số giây (tối thiểu 30)",
+    PlaceholderText = "Nhập số giây (tối thiểu 0)",
     Callback = function(value)
         local num = tonumber(value)
         if num and num >= 0 then
@@ -320,7 +295,7 @@ Main:CreateInput({
             end
             Rayfield:Notify({Title = "Đã cập nhật", Content = "Auto Sell mỗi " .. num .. " giây", Duration = 3})
         else
-            Rayfield:Notify({Title = "Lỗi", Content = "Phải nhập số >= 30!", Duration = 3})
+            Rayfield:Notify({Title = "Lỗi", Content = "Phải nhập số >= 0!", Duration = 3})
         end
     end
 })
@@ -336,66 +311,192 @@ for i = 1, 4 do
 end
 
 -- ==================== TAB TELEPORT ====================
-local TPTab = Window:CreateTab("Teleport", 4483345906)
-TPTab:CreateSection("🏝️ Islands (Freeze 5s ngay lập tức)")
-local Islands = {
-    ["Island 1"] = Vector3.new(252.7, 29.8, 58.1),
-    ["Island 2"] = Vector3.new(1770.4, 20.4, -386.2),
-    ["Island 3"] = Vector3.new(887.1, 21.8, 1249.5),
-    ["Island 4"] = Vector3.new(655.08, 28.88, -913.26),
-    ["Island 5"] = Vector3.new(-397.7, 24.0, 1055.2)
-}
-for name, pos in pairs(Islands) do
-    TPTab:CreateButton({
-        Name = "🏝️ " .. name,
-        Callback = function()
-            tpWithFreeze(pos, name)
+local TPTab = Window:CreateTab("TP", 4483362458)
+TPTab:CreateSection("🏝️ Island List (Freeze 5s khi TP)")
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 1", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(252.70, 29.84, 58.19), "Island 1")
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 2", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(1770.43, 20.45, -386.22), "Island 2")
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 3", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(887.17, 21.85, 1249.59), "Island 3")
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 4", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(648.36, 28.14, -882.51), "Island 4")
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 5", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(-397.76, 24.02, 1055.27), "Island 5")
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 6", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(-993.928589, 27.0413361, -69.7470322), "Island 6")
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 7", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(-739, 27, -1290), "Island 7")
+    end
+})
+
+TPTab:CreateSection("⏩ Next Islands")
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 8", 
+    Callback = function() 
+        Rayfield:Notify({
+            Title = "Thông báo", 
+            Content = "Vui lòng cập nhật tọa độ Island 8", 
+            Duration = 3
+        })
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 9", 
+    Callback = function() 
+        Rayfield:Notify({
+            Title = "Thông báo", 
+            Content = "Vui lòng cập nhật tọa độ Island 9", 
+            Duration = 3
+        })
+    end
+})
+
+-- THÊM 2 NÚT MỚI THEO YÊU CẦU
+TPTab:CreateSection("🛠️ Part Island 6 Tools")
+
+-- Nút 1: Tạo Part Fishing Island 6
+TPTab:CreateButton({
+    Name = "🔨 Create Part Fishing Island 6",
+    Callback = function()
+        -- Tạo folder Jiceo nếu chưa có
+        local folder = game.Workspace:FindFirstChild("Jiceo")
+        if not folder then
+            folder = Instance.new("Folder")
+            folder.Name = "Jiceo"
+            folder.Parent = game.Workspace
         end
-    })
-end
+        
+        -- Kiểm tra part đã tồn tại chưa
+        local existingPart = folder:FindFirstChild("Island 6")
+        if existingPart then
+            Rayfield:Notify({
+                Title = "Thông báo",
+                Content = "Part 'Island 6' đã tồn tại trong folder Jiceo!",
+                Duration = 3
+            })
+            return
+        end
+        
+        -- Tạo part mới
+        local part = Instance.new("Part")
+        part.Name = "Island 6"
+        part.Size = Vector3.new(10, 1, 10)
+        part.Position = Vector3.new(-993.928589, 27.0413361, -69.7470322)
+        part.Orientation = Vector3.new(0, 61.444000244140625, 0)
+        part.Anchored = true
+        part.CanCollide = true
+        part.BrickColor = BrickColor.new("Bright blue")
+        part.Material = Enum.Material.Neon
+        part.Parent = folder
+        
+        -- Thêm hiệu ứng (optional)
+        local selectionBox = Instance.new("SelectionBox")
+        selectionBox.Adornee = part
+        selectionBox.Color3 = Color3.new(0, 1, 1)
+        selectionBox.LineThickness = 0.1
+        selectionBox.Parent = part
+        
+        Rayfield:Notify({
+            Title = "✅ Thành công",
+            Content = "Đã tạo part 'Island 6' trong folder Jiceo!",
+            Duration = 3
+        })
+    end
+})
 
-TPTab:CreateSection("📍 Quick TP")
+-- Nút 2: TP đến Part Island 6 (ĐÃ SỬA ĐỂ ĐỨNG TRÊN PART)
 TPTab:CreateButton({
-    Name = "💰 TP Sell Point",
+    Name = "📍 TP Part Island 6 (Đứng trên part)",
     Callback = function()
-        tpWithFreeze(Vector3.new(171.03, 22.71, 71.14), "Sell Point")
-    end
-})
-TPTab:CreateButton({
-    Name = "👤 TP BI HUYNH",
-    Callback = function()
-        tpWithFreeze(Vector3.new(145.25, 29.06, -114.44), "BI HUYNH")
-    end
-})
-TPTab:CreateButton({
-    Name = "👤 TP Yune Khangg",
-    Callback = function()
-        tpWithFreeze(Vector3.new(622.27, 20.97, 1328.90), "Yune Khangg")
-    end
-})
-TPTab:CreateButton({
-    Name = "👤 TP TGaming",
-    Callback = function()
-        tpWithFreeze(Vector3.new(586.54, 21.32, -915.99), "TGaming")
-    end
-})
-
--- ==================== AUTO KEYS LOOP ====================
-task.spawn(function()
-    while true do
-        for key, enabled in pairs(getgenv().AutoKeys) do
-            if enabled then
-                local keyCode = Enum.KeyCode[key]
-                if keyCode then
-                    vim:SendKeyEvent(true, keyCode, false, game)
-                    task.wait(0.02)
-                    vim:SendKeyEvent(false, keyCode, false, game)
-                end
+        local folder = game.Workspace:FindFirstChild("Jiceo")
+        if folder then
+            local part = folder:FindFirstChild("Island 6")
+            if part then
+                -- Tính toán vị trí đứng trên bề mặt part
+                local partSize = part.Size
+                local partPos = part.Position
+                -- Đặt vị trí đứng ở giữa part và cao hơn bề mặt 3 units
+                local standPosition = CFrame.new(partPos.X, partPos.Y + partSize.Y/2 + 3, partPos.Z)
+                
+                -- Teleport
+                Rayfield:Notify({
+                    Title = "Teleport", 
+                    Content = "Đang dịch chuyển đến Part Island 6...", 
+                    Duration = 2
+                })
+                
+                instantTP(standPosition)
+                task.wait(0.5)
+                
+                -- Đóng băng nhân vật
+                setCharacterFreeze(true)
+                
+                Rayfield:Notify({
+                    Title = "⚠️ Đóng băng", 
+                    Content = "Nhân vật sẽ đóng băng trong 5 giây để tránh lag!", 
+                    Duration = 3
+                })
+                
+                task.wait(5)
+                setCharacterFreeze(false)
+                
+                Rayfield:Notify({
+                    Title = "✅ Hoàn tất", 
+                    Content = "Đã đến Part Island 6 và trở lại bình thường!", 
+                    Duration = 2
+                })
+            else
+                Rayfield:Notify({
+                    Title = "❌ Lỗi",
+                    Content = "Không tìm thấy part 'Island 6' trong folder Jiceo! Hãy tạo part trước.",
+                    Duration = 3
+                })
             end
+        else
+            Rayfield:Notify({
+                Title = "❌ Lỗi",
+                Content = "Không tìm thấy folder Jiceo! Hãy tạo part trước.",
+                Duration = 3
+            })
         end
-        task.wait(0.1)
     end
-end)
+})
 
 -- ==================== SPEED HACK LOOP ====================
 RunService.Heartbeat:Connect(function()
@@ -475,7 +576,7 @@ task.spawn(function()
     end
 end)
 
--- ==================== AUTO SELL LOOP (KHI ĐẦY 23 ITEMS) ====================
+-- ==================== AUTO SELL LOOP (KHI ĐẦY ITEMS) ====================
 task.spawn(function()
     while true do
         if getgenv().AutoSellFull and getgenv().SavedFarmPos and not getgenv().IsSelling then
@@ -485,7 +586,7 @@ task.spawn(function()
                     count = count + 1
                 end
             end
-            if count >= getgenv().FullInventoryThreshold then   -- <--- Ở đây dùng 23
+            if count >= getgenv().FullInventoryThreshold then
                 getgenv().IsSelling = true
                 Rayfield:Notify({Title = "📦 Full " .. count .. "/" .. getgenv().FullInventoryThreshold, Content = "Đang tự động bán...", Duration = 3})
                 
@@ -580,4 +681,8 @@ task.spawn(function()
 end)
 
 Rayfield:LoadConfiguration()
-Rayfield:Notify({Title = "✅ JICEO LOADED!", Duration = 5})
+Rayfield:Notify({
+    Title = "JICEO SYSTEM",
+    Content = "Script đã tải xong! Chúc bạn farm vui vẻ.",
+    Duration = 5
+})
