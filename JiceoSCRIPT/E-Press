@@ -1,0 +1,20 @@
+local ProximityPromptService = game:GetService("ProximityPromptService")
+
+-- Hàm này sẽ ép thời gian giữ phím về 0 (nhấn là xong)
+local function makeInstant(prompt)
+    prompt.HoldDuration = 0
+end
+
+-- Áp dụng cho tất cả các nút hiện có trong game
+for _, prompt in pairs(game:GetDescendants()) do
+    if prompt:IsA("ProximityPrompt") then
+        makeInstant(prompt)
+    end
+end
+
+-- Tự động áp dụng cho các nút mới xuất hiện sau này
+ProximityPromptService.PromptAdded:Connect(function(prompt)
+    makeInstant(prompt)
+end)
+
+print("JICEO SYSTEM: Instant Hold E Activated!")
