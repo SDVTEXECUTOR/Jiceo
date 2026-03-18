@@ -1,13 +1,8 @@
 {
-  "rewrites": [
-    {
-      "source": "/:path*",
-      "destination": "/:path*"
-    }
-  ],
+  "cleanUrls": true,
   "headers": [
     {
-      "source": "/(.*).lua",
+      "source": "/(.*)",
       "headers": [
         {
           "key": "Content-Type",
@@ -20,4 +15,4 @@
       ]
     }
   ]
-}vercel.json
+}
