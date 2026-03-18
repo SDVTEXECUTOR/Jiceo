@@ -1,38 +1,57 @@
--- [[ JICEO LOADER - VERCEL VERSION ]]
+-- [[ JICEO LOADER - FIXED VERSION ]]
 local REQUIRED_GAME_ID = 115893378298440
 local LOGO_ID = "rbxassetid://89065201750107"
 local PC_URL = "https://raw.githubusercontent.com/SDVTEXECUTOR/Jiceo/refs/heads/main/JiceoSCRIPT/PCTF"
 local MB_URL = "https://raw.githubusercontent.com/SDVTEXECUTOR/Jiceo/refs/heads/main/JiceoSCRIPT/MBTF"
 
 local function notify(title, text)
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = title,
-        Text = text,
-        Icon = LOGO_ID,
-        Duration = 5
-    })
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = title,
+            Text = text,
+            Icon = LOGO_ID,
+            Duration = 5
+        })
+    end)
 end
 
--- 1. Check Game
-if game.PlaceId ~= REQUIRED_GAME_ID then
-    notify("Jiceo Error", "Script không hỗ trợ Game này!")
+-- 1. Kiểm tra ID Game (Cả PlaceId và GameId cho chắc chắn)
+if game.PlaceId ~= REQUIRED_GAME_ID and game.GameId ~= REQUIRED_GAME_ID then
+    -- Nếu bạn muốn script chạy ở mọi game để test, hãy tạm thời comment 2 dòng dưới này lại
+    notify("Jiceo Error", "Script không hỗ trợ Game này! ID: " .. game.PlaceId)
     return
 end
 
--- 2. Check Device
+-- 2. Kiểm tra thiết bị
 local UIS = game:GetService("UserInputService")
-local isMobile = (UIS.TouchEnabled and not UIS.KeyboardEnabled)
+-- Cách check mobile chuẩn hơn một chút
+local isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
+
 local finalUrl = isMobile and MB_URL or PC_URL
+local deviceName = isMobile and "Mobile" or "PC"
 
--- 3. Notify Loading
-notify("Jiceo Loader", "Đang tải bản cho " .. (isMobile and "Mobile" or "PC") .. "...")
+-- 3. Thông báo đang load
+notify("Jiceo Loader", "Đang tải bản cho " .. deviceName .. "...")
 
--- 4. Load Main Script
-local success, content = pcall(function() return game:HttpGet(finalUrl) end)
+-- 4. Tải và chạy script
+local success, content = pcall(function() 
+    return game:HttpGet(finalUrl) 
+end)
 
-if success then
-    notify("Jiceo Success", "Script đã sẵn sàng!")
-    loadstring(content)()
+if success and content and #content > 0 then
+    -- Kiểm tra xem nội dung tải về có phải là HTML lỗi không
+    if content:find("<!DOCTYPE html>") or content:find("<html>") then
+        notify("Jiceo Error", "Lỗi: Link GitHub trả về trang Web (HTML) thay vì Code!")
+    else
+        notify("Jiceo Success", "Script " .. deviceName .. " đã sẵn sàng!")
+        local func, err = loadstring(content)
+        if func then
+            func()
+        else
+            warn("Lỗi biên dịch script: " .. tostring(err))
+            notify("Jiceo Error", "Script chính bị lỗi cú pháp!")
+        end
+    end
 else
-    notify("Jiceo Error", "Lỗi kết nối GitHub!")
+    notify("Jiceo Error", "Lỗi kết nối hoặc file trống!")
 end
