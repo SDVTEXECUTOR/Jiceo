@@ -1,0 +1,583 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- ==================== BIẾN TOÀN CỤC ====================
+getgenv().AutoCast = false
+getgenv().AutoReturn = false
+getgenv().SavedFarmPos = nil
+getgenv().AutoSell = false
+getgenv().SellInterval = 30
+getgenv().NextSellTime = 0
+getgenv().Skills = {Skill1 = false, Skill2 = false, Skill3 = false, Skill4 = false}
+getgenv().IsSelling = false
+getgenv().AutoKeys = {Z = false, X = false, C = false, V = false}
+getgenv().SpeedEnabled = false
+getgenv().InfJumpEnabled = false
+getgenv().SpeedValue = 50
+getgenv().AutoSellFull = false
+getgenv().FullInventoryThreshold = 60  -- <--- Đổi thành 23 như bạn muốn
+
+local plr = game.Players.LocalPlayer
+local playerGui = plr:WaitForChild("PlayerGui")
+local vim = game:GetService("VirtualInputManager")
+local uis = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+-- Biến cho Speed Hack
+local vectorForce = nil
+local originalProps = {}
+
+-- ==================== HÀM HỖ TRỢ ====================
+local function saveOriginalProps(char)
+    originalProps = {}
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            originalProps[part] = part.CustomPhysicalProperties
+        end
+    end
+end
+
+local function restoreOriginalProps(char)
+    for part, props in pairs(originalProps) do
+        if part and part.Parent and props then
+            pcall(function() part.CustomPhysicalProperties = props end)
+        end
+    end
+end
+
+local function setupSpeedForce(enable)
+    local char = plr.Character
+    if not char then return end
+    local hrp = char:WaitForChild("HumanoidRootPart", 5)
+    if not hrp then return end
+    
+    if vectorForce then vectorForce:Destroy() vectorForce = nil end
+    
+    if enable then
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.1, 0.5, 0.5, 1)
+            end
+        end
+        vectorForce = Instance.new("VectorForce")
+        vectorForce.Force = Vector3.new(0, 0, 0)
+        vectorForce.RelativeTo = Enum.ActuatorRelativeTo.World
+        vectorForce.ApplyAtCenterOfMass = true
+        local attachment = hrp:FindFirstChild("RootRigAttachment") or Instance.new("Attachment", hrp)
+        vectorForce.Attachment0 = attachment
+        vectorForce.Parent = hrp
+    end
+end
+
+local function FireButtonSafe(button)
+    if not button or not button:IsA("GuiButton") or not button.Visible then return end
+   
+    pcall(function()
+        for _, conn in pairs(getconnections(button.MouseButton1Click)) do conn:Fire() end
+        for _, conn in pairs(getconnections(button.Activated)) do conn:Fire() end
+    end)
+   
+    local x = button.AbsolutePosition.X + button.AbsoluteSize.X / 2
+    local y = button.AbsolutePosition.Y + button.AbsoluteSize.Y / 2 + 55
+   
+    vim:SendMouseButtonEvent(x, y, 0, true, game, 0)
+    task.wait(0.035)
+    vim:SendMouseButtonEvent(x, y, 0, false, game, 0)
+end
+
+local function GetDistanceToFarm()
+    local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp or not getgenv().SavedFarmPos then return 999 end
+    return (hrp.Position - getgenv().SavedFarmPos).Magnitude
+end
+
+local function instantTP(pos)
+    local char = plr.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local target = (typeof(pos) == "Vector3" and CFrame.new(pos)) or pos
+        char.HumanoidRootPart.CFrame = target
+        char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0,0,0)
+    end
+end
+
+local function setCharacterFreeze(freeze)
+    local char = plr.Character
+    if char then
+        local humanoid = char:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.PlatformStand = freeze
+        end
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Anchored = freeze
+            end
+        end
+    end
+end
+
+local function tpWithFreeze(position, islandName)
+    if not position then return end
+   
+    Rayfield:Notify({Title = "Teleport", Content = "Đang dịch chuyển đến " .. islandName .. "...", Duration = 2})
+   
+    instantTP(position)
+    task.wait(0.08)
+   
+    setCharacterFreeze(true)
+   
+    Rayfield:Notify({Title = "🧊 Đóng băng ngay lập tức", Content = "Nhân vật frozen 5 giây để chống kick/anti-TP", Duration = 4})
+   
+    task.wait(5)
+   
+    setCharacterFreeze(false)
+   
+    Rayfield:Notify({Title = "✅ Đến nơi", Content = "Đã đến " .. islandName .. " thành công!", Duration = 2})
+end
+
+local function fixLag()
+    local lighting = game:GetService("Lighting")
+    lighting.GlobalShadows = false
+    lighting.FogEnd = 9e9
+    settings().Rendering.QualityLevel = 1
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("Part") or v:IsA("UnionOperation") or v:IsA("MeshPart") or v:IsA("CornerWedgePart") or v:IsA("TrussPart") then
+            v.Material = "Plastic"
+            v.Reflectance = 0
+        elseif v:IsA("Decal") or v:IsA("Texture") then
+            v.Transparency = 1
+        elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+            v.Enabled = false
+        elseif v:IsA("Explosion") then
+            v.Visible = false
+        end
+    end
+    Rayfield:Notify({Title = "Fix Lag", Content = "Graphics Optimized!", Duration = 3})
+end
+
+plr.CharacterAdded:Connect(function(char)
+    task.wait(1)
+    saveOriginalProps(char)
+    if getgenv().SpeedEnabled then setupSpeedForce(true) end
+end)
+
+if plr.Character then saveOriginalProps(plr.Character) end
+
+-- ==================== TẠO UI ====================
+local Window = Rayfield:CreateWindow({
+    Name = "JICEO SYSTEM | TITAN FISCH",
+    LoadingTitle = "JICEO Loading...",
+    LoadingSubtitle = "by JICEO",
+    ConfigurationSaving = { Enabled = true, FolderName = "JICEO_Titan", FileName = "Config" }
+})
+
+-- ==================== TAB INFO ====================
+local InfoTab = Window:CreateTab("📊 Info", 4483362458)
+InfoTab:CreateSection("JICEO SYSTEM v3.0")
+InfoTab:CreateLabel("🔥 Script by JICEO")
+InfoTab:CreateLabel("✅ Auto Cast + Auto Skill + Auto Sell")
+local InvLabel = InfoTab:CreateLabel("🎒 Inventory: 0 items")
+local TimeLabel = InfoTab:CreateLabel("⏳ Next Sell in: -- s")
+local ItemsLabel = InfoTab:CreateLabel("📦 Items: Empty")
+
+task.spawn(function()
+    while true do
+        local items = plr.Backpack:GetChildren()
+        local count = 0
+        local itemList = ""
+        for _, item in pairs(items) do
+            if item:IsA("Tool") and item.Name ~= "Rod" then
+                count = count + 1
+                itemList = itemList .. item.Name .. ", "
+            end
+        end
+        InvLabel:Set("🎒 Inventory: " .. count .. " / " .. getgenv().FullInventoryThreshold .. " items")
+        ItemsLabel:Set("📦 Items: " .. (itemList ~= "" and itemList:sub(1, #itemList-2) or "Empty"))
+        
+        if getgenv().AutoSell and getgenv().NextSellTime > 0 then
+            local timeLeft = math.max(0, math.floor(getgenv().NextSellTime - tick()))
+            TimeLabel:Set("⏳ Next Sell in: " .. timeLeft .. " s")
+        else
+            TimeLabel:Set("⏳ Next Sell in: --")
+        end
+       
+        task.wait(1)
+    end
+end)
+
+-- ==================== TAB AUTO KEYS ====================
+local AutoKeyTab = Window:CreateTab("Auto Keys", 4483345998)
+AutoKeyTab:CreateSection("🎮 Auto Press Keys")
+AutoKeyTab:CreateToggle({
+    Name = "🔴 Auto Z",
+    CurrentValue = false,
+    Callback = function(v) getgenv().AutoKeys.Z = v end
+})
+AutoKeyTab:CreateToggle({
+    Name = "🟠 Auto X",
+    CurrentValue = false,
+    Callback = function(v) getgenv().AutoKeys.X = v end
+})
+AutoKeyTab:CreateToggle({
+    Name = "🟡 Auto C",
+    CurrentValue = false,
+    Callback = function(v) getgenv().AutoKeys.C = v end
+})
+AutoKeyTab:CreateToggle({
+    Name = "🟢 Auto V",
+    CurrentValue = false,
+    Callback = function(v) getgenv().AutoKeys.V = v end
+})
+
+-- ==================== TAB PLAYER ====================
+local PlayerTab = Window:CreateTab("Player", 4483362458)
+PlayerTab:CreateSection("🏃 Movement")
+PlayerTab:CreateToggle({
+    Name = "🚀 Speed Hack",
+    CurrentValue = false,
+    Callback = function(v)
+        getgenv().SpeedEnabled = v
+        local char = plr.Character
+        if char then
+            saveOriginalProps(char)
+            setupSpeedForce(v)
+            if not v then restoreOriginalProps(char) end
+        end
+    end
+})
+PlayerTab:CreateInput({
+    Name = "⚡ Speed Value (16-100)",
+    CurrentValue = "50",
+    PlaceholderText = "Nhập số từ 16-100",
+    Callback = function(value)
+        local num = tonumber(value)
+        if num and num >= 16 and num <= 100 then
+            getgenv().SpeedValue = num
+        else
+            getgenv().SpeedValue = 50
+        end
+    end
+})
+PlayerTab:CreateToggle({
+    Name = "🦘 Infinite Jump",
+    CurrentValue = false,
+    Callback = function(v) getgenv().InfJumpEnabled = v end
+})
+PlayerTab:CreateSection("🛠️ Optimization")
+PlayerTab:CreateButton({
+    Name = "🛡️ Fix Lag",
+    Callback = fixLag
+})
+
+-- ==================== TAB MAIN ====================
+local Main = Window:CreateTab("Main", 4483362458)
+Main:CreateToggle({
+    Name = "🔥 Auto Click FishingButton",
+    CurrentValue = false,
+    Callback = function(v) getgenv().AutoCast = v end
+})
+Main:CreateButton({
+    Name = "📍 Set Farm Position",
+    Callback = function()
+        local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            getgenv().SavedFarmPos = hrp.Position
+            Rayfield:Notify({Title = "Saved!", Content = "Vị trí farm đã lưu!", Duration = 3})
+        end
+    end
+})
+Main:CreateToggle({
+    Name = "🔄 Auto Return Back (nếu xa > 3 studs)",
+    CurrentValue = false,
+    Callback = function(v) getgenv().AutoReturn = v end
+})
+Main:CreateToggle({
+    Name = "💵 Auto Sell (Theo thời gian)",
+    CurrentValue = false,
+    Callback = function(v)
+        getgenv().AutoSell = v
+        if v and getgenv().SavedFarmPos then
+            getgenv().NextSellTime = tick() + getgenv().SellInterval
+            Rayfield:Notify({Title = "Auto Sell ON", Content = "Bắt đầu bán mỗi " .. getgenv().SellInterval .. " giây", Duration = 3})
+        end
+    end
+})
+Main:CreateToggle({
+    Name = "🎒 Auto Sell Khi Đầy " .. getgenv().FullInventoryThreshold .. " items",
+    CurrentValue = false,
+    Callback = function(v)
+        getgenv().AutoSellFull = v
+    end
+})
+Main:CreateInput({
+    Name = "⏱️ Sell Every (giây)",
+    CurrentValue = "30",
+    PlaceholderText = "Nhập số giây (tối thiểu 30)",
+    Callback = function(value)
+        local num = tonumber(value)
+        if num and num >= 0 then
+            getgenv().SellInterval = num
+            if getgenv().AutoSell then
+                getgenv().NextSellTime = tick() + num
+            end
+            Rayfield:Notify({Title = "Đã cập nhật", Content = "Auto Sell mỗi " .. num .. " giây", Duration = 3})
+        else
+            Rayfield:Notify({Title = "Lỗi", Content = "Phải nhập số >= 30!", Duration = 3})
+        end
+    end
+})
+
+-- ==================== TAB SKILLS ====================
+local SkillsTab = Window:CreateTab("Skills", 4483362458)
+for i = 1, 4 do
+    SkillsTab:CreateToggle({
+        Name = "⚡ Auto Skill " .. i,
+        CurrentValue = false,
+        Callback = function(v) getgenv().Skills["Skill"..i] = v end
+    })
+end
+
+-- ==================== TAB TELEPORT ====================
+local TPTab = Window:CreateTab("Teleport", 4483345906)
+TPTab:CreateSection("🏝️ Islands (Freeze 5s ngay lập tức)")
+local Islands = {
+    ["Island 1"] = Vector3.new(252.7, 29.8, 58.1),
+    ["Island 2"] = Vector3.new(1770.4, 20.4, -386.2),
+    ["Island 3"] = Vector3.new(887.1, 21.8, 1249.5),
+    ["Island 4"] = Vector3.new(655.08, 28.88, -913.26),
+    ["Island 5"] = Vector3.new(-397.7, 24.0, 1055.2)
+}
+for name, pos in pairs(Islands) do
+    TPTab:CreateButton({
+        Name = "🏝️ " .. name,
+        Callback = function()
+            tpWithFreeze(pos, name)
+        end
+    })
+end
+
+TPTab:CreateSection("📍 Quick TP")
+TPTab:CreateButton({
+    Name = "💰 TP Sell Point",
+    Callback = function()
+        tpWithFreeze(Vector3.new(171.03, 22.71, 71.14), "Sell Point")
+    end
+})
+TPTab:CreateButton({
+    Name = "👤 TP BI HUYNH",
+    Callback = function()
+        tpWithFreeze(Vector3.new(145.25, 29.06, -114.44), "BI HUYNH")
+    end
+})
+TPTab:CreateButton({
+    Name = "👤 TP Yune Khangg",
+    Callback = function()
+        tpWithFreeze(Vector3.new(622.27, 20.97, 1328.90), "Yune Khangg")
+    end
+})
+TPTab:CreateButton({
+    Name = "👤 TP TGaming",
+    Callback = function()
+        tpWithFreeze(Vector3.new(586.54, 21.32, -915.99), "TGaming")
+    end
+})
+
+-- ==================== AUTO KEYS LOOP ====================
+task.spawn(function()
+    while true do
+        for key, enabled in pairs(getgenv().AutoKeys) do
+            if enabled then
+                local keyCode = Enum.KeyCode[key]
+                if keyCode then
+                    vim:SendKeyEvent(true, keyCode, false, game)
+                    task.wait(0.02)
+                    vim:SendKeyEvent(false, keyCode, false, game)
+                end
+            end
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- ==================== SPEED HACK LOOP ====================
+RunService.Heartbeat:Connect(function()
+    if getgenv().SpeedEnabled and plr.Character then
+        local humanoid = plr.Character:FindFirstChild("Humanoid")
+        local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+        if humanoid and hrp and vectorForce then
+            local state = humanoid:GetState()
+            if state == Enum.HumanoidStateType.Jumping or state == Enum.HumanoidStateType.Freefall or state == Enum.HumanoidStateType.Landed then
+                vectorForce.Force = Vector3.new(0, 0, 0)
+            else
+                local moveDir = humanoid.MoveDirection
+                if moveDir.Magnitude > 0 then
+                    vectorForce.Force = Vector3.new(moveDir.X, 0, moveDir.Z) * (getgenv().SpeedValue * 500)
+                else
+                    vectorForce.Force = Vector3.new(0, 0, 0)
+                end
+            end
+        end
+    end
+end)
+
+-- ==================== INFINITE JUMP ====================
+uis.JumpRequest:Connect(function()
+    if getgenv().InfJumpEnabled then
+        local character = plr.Character
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+-- ==================== AUTO SELL LOOP (THEO THỜI GIAN) ====================
+task.spawn(function()
+    while true do
+        if getgenv().AutoSell and getgenv().SavedFarmPos and tick() >= getgenv().NextSellTime and not getgenv().IsSelling then
+            getgenv().IsSelling = true
+            local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.CFrame = CFrame.new(171.03, 22.71, 71.14)
+                task.wait(0.12)
+                
+                setCharacterFreeze(true)
+                Rayfield:Notify({Title = "🧊 Freeze Sell", Content = "Đóng băng 5 giây tại Sell Point...", Duration = 4})
+                task.wait(5)
+                
+                for _ = 1, 6 do
+                    vim:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+                    task.wait(0.08)
+                    vim:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+                end
+                
+                task.wait(0.9)
+                
+                local sellGui = playerGui:FindFirstChild("SellGUI", true)
+                if sellGui and sellGui.Enabled then
+                    local main = sellGui:FindFirstChild("Main", true) or sellGui
+                    local allBtn = main:FindFirstChild("All", true)
+                    local closeBtn = main:FindFirstChild("Close", true)
+                    if allBtn then 
+                        FireButtonSafe(allBtn) 
+                        task.wait(0.5) 
+                    end
+                    if closeBtn then 
+                        FireButtonSafe(closeBtn) 
+                    end
+                end
+                
+                hrp.CFrame = CFrame.new(getgenv().SavedFarmPos)
+                setCharacterFreeze(false)
+            end
+            getgenv().NextSellTime = tick() + getgenv().SellInterval
+            getgenv().IsSelling = false
+        end
+        task.wait(0.8)
+    end
+end)
+
+-- ==================== AUTO SELL LOOP (KHI ĐẦY 23 ITEMS) ====================
+task.spawn(function()
+    while true do
+        if getgenv().AutoSellFull and getgenv().SavedFarmPos and not getgenv().IsSelling then
+            local count = 0
+            for _, item in pairs(plr.Backpack:GetChildren()) do
+                if item:IsA("Tool") and item.Name ~= "Rod" then
+                    count = count + 1
+                end
+            end
+            if count >= getgenv().FullInventoryThreshold then   -- <--- Ở đây dùng 23
+                getgenv().IsSelling = true
+                Rayfield:Notify({Title = "📦 Full " .. count .. "/" .. getgenv().FullInventoryThreshold, Content = "Đang tự động bán...", Duration = 3})
+                
+                local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.CFrame = CFrame.new(171.03, 22.71, 71.14)
+                    task.wait(0.12)
+                    
+                    setCharacterFreeze(true)
+                    Rayfield:Notify({Title = "🧊 Freeze Sell Full", Content = "Đóng băng 5 giây tại Sell Point...", Duration = 4})
+                    task.wait(5)
+                    
+                    for _ = 1, 6 do
+                        vim:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+                        task.wait(0.08)
+                        vim:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+                    end
+                    
+                    task.wait(0.9)
+                    
+                    local sellGui = playerGui:FindFirstChild("SellGUI", true)
+                    if sellGui and sellGui.Enabled then
+                        local main = sellGui:FindFirstChild("Main", true) or sellGui
+                        local allBtn = main:FindFirstChild("All", true)
+                        local closeBtn = main:FindFirstChild("Close", true)
+                        if allBtn then 
+                            FireButtonSafe(allBtn) 
+                            task.wait(0.5) 
+                        end
+                        if closeBtn then 
+                            FireButtonSafe(closeBtn) 
+                        end
+                    end
+                    
+                    hrp.CFrame = CFrame.new(getgenv().SavedFarmPos)
+                    setCharacterFreeze(false)
+                end
+                getgenv().NextSellTime = tick() + getgenv().SellInterval
+                getgenv().IsSelling = false
+            end
+        end
+        task.wait(2.5)
+    end
+end)
+
+-- ==================== AUTO RETURN LOOP ====================
+task.spawn(function()
+    while true do
+        if getgenv().AutoReturn and getgenv().SavedFarmPos and not getgenv().IsSelling then
+            if GetDistanceToFarm() > 3 then
+                local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.CFrame = CFrame.new(getgenv().SavedFarmPos)
+                end
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+-- ==================== MAIN FARMING LOOP ====================
+task.spawn(function()
+    while true do
+        if getgenv().AutoCast and not getgenv().IsSelling then
+            for _, gui in ipairs(playerGui:GetChildren()) do
+                if gui:IsA("ScreenGui") and gui.Enabled then
+                    local fishBtn = gui:FindFirstChild("FishingButton", true)
+                    local reelBtn = gui:FindFirstChild("ReelButton", true)
+                    local collectBtn = gui:FindFirstChild("CollectButton", true)
+                   
+                    if fishBtn then FireButtonSafe(fishBtn) end
+                    if reelBtn then FireButtonSafe(reelBtn) end
+                    if collectBtn then FireButtonSafe(collectBtn) end
+                   
+                    local skillsFolder = gui:FindFirstChild("Skills", true)
+                    if skillsFolder then
+                        for i = 1, 4 do
+                            if getgenv().Skills["Skill"..i] then
+                                local skillBtn = skillsFolder:FindFirstChild("Skill"..i, true)
+                                if skillBtn then
+                                    FireButtonSafe(skillBtn)
+                                    task.wait(0.08)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(0.32)
+    end
+end)
+
+Rayfield:LoadConfiguration()
+Rayfield:Notify({Title = "✅ JICEO LOADED!", Duration = 5})
