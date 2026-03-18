@@ -1,0 +1,580 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Window = Rayfield:CreateWindow({
+    Name = "Titan Fisch | JICEO",
+    LoadingTitle = "JICEO SYSTEM Loading...",
+    LoadingSubtitle = "by JICEO",
+    ConfigurationSaving = {Enabled = true, FolderName = "ReyFile_Configs", FileName = "MainConfig"},
+    KeySystem = false
+})
+
+local vim = game:GetService("VirtualInputManager")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = game.Players.LocalPlayer
+
+local flags = {
+    autoZ = false, autoX = false, autoC = false, autoV = false,
+    autoCast = false, autoSellTime = false, autoSellFull = false, 
+    autoEquip = false, autoReturn = false,
+    speedEnabled = false, infJumpEnabled = false
+}
+
+local sellPosition = Vector3.new(171.03, 22.71, 71.14)
+local farmPosition = nil
+local sellInterval = 60
+local timeRemaining = 60
+_G.IsSelling = false
+
+-- PLAYER FEATURES (từ file thứ 2)
+local speedValue = 50
+local vectorForce = nil
+local originalProps = {}
+
+local function saveOriginalProps(char)
+    originalProps = {}
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            originalProps[part] = part.CustomPhysicalProperties
+        end
+    end
+end
+
+local function restoreOriginalProps(char)
+    for part, props in pairs(originalProps) do
+        if part and part.Parent and props then
+            pcall(function() part.CustomPhysicalProperties = props end)
+        end
+    end
+end
+
+local function setupSpeedForce(enable)
+    local char = player.Character
+    if not char then return end
+    local hrp = char:WaitForChild("HumanoidRootPart", 5)
+    if not hrp then return end
+
+    if vectorForce then vectorForce:Destroy() vectorForce = nil end
+
+    if enable then
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.1, 0.5, 0.5, 1)
+            end
+        end
+
+        vectorForce = Instance.new("VectorForce")
+        vectorForce.Force = Vector3.new(0, 0, 0)
+        vectorForce.RelativeTo = Enum.ActuatorRelativeTo.World
+        vectorForce.ApplyAtCenterOfMass = true
+        local attachment = hrp:FindFirstChild("RootRigAttachment") or Instance.new("Attachment", hrp)
+        vectorForce.Attachment0 = attachment
+        vectorForce.Parent = hrp
+    end
+end
+
+player.CharacterAdded:Connect(function(char)
+    task.wait(1)
+    saveOriginalProps(char)
+    if flags.speedEnabled then setupSpeedForce(true) end
+end)
+
+if player.Character then saveOriginalProps(player.Character) end
+
+--- FUNCTIONS ---
+
+local function setCharacterFreeze(freeze)
+    local char = player.Character
+    if char then
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then 
+                part.Anchored = freeze 
+            end
+        end
+    end
+end
+
+local function instantTP(pos)
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local target = (typeof(pos) == "Vector3" and CFrame.new(pos)) or pos
+        char.HumanoidRootPart.CFrame = target
+        char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0,0,0)
+    end
+end
+
+-- HÀM TELEPORT CÓ ĐÓNG BĂNG 5 GIÂY
+local function tpWithFreeze(position, islandName)
+    if not position then return end
+    
+    -- Thông báo
+    Rayfield:Notify({
+        Title = "Teleport", 
+        Content = "Đang dịch chuyển đến " .. islandName .. "...", 
+        Duration = 2
+    })
+    
+    -- Teleport
+    instantTP(position)
+    task.wait(0.5)
+    
+    -- Đóng băng nhân vật
+    setCharacterFreeze(true)
+    
+    -- Thông báo đóng băng
+    Rayfield:Notify({
+        Title = "⚠️ Đóng băng", 
+        Content = "Nhân vật sẽ đóng băng trong 5 giây để tránh lag!", 
+        Duration = 3
+    })
+    
+    -- Chờ 5 giây
+    task.wait(5)
+    
+    -- Mở đóng băng
+    setCharacterFreeze(false)
+    
+    -- Thông báo hoàn tất
+    Rayfield:Notify({
+        Title = "✅ Hoàn tất", 
+        Content = "Đã đến " .. islandName .. " và trở lại bình thường!", 
+        Duration = 2
+    })
+end
+
+local function fixLag()
+    local lighting = game:GetService("Lighting")
+    lighting.GlobalShadows = false
+    lighting.FogEnd = 9e9
+    settings().Rendering.QualityLevel = 1
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("Part") or v:IsA("UnionOperation") or v:IsA("MeshPart") or v:IsA("CornerWedgePart") or v:IsA("TrussPart") then
+            v.Material = "Plastic"
+            v.Reflectance = 0
+        elseif v:IsA("Decal") or v:IsA("Texture") then
+            v.Transparency = 1
+        elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+            v.Enabled = false
+        elseif v:IsA("Explosion") then
+            v.Visible = false
+        end
+    end
+    Rayfield:Notify({Title = "Fix Lag", Content = "Graphics Optimized!", Duration = 3})
+end
+
+local function forceClick(button)
+    if not button then return end
+    pcall(function()
+        local pos = button.AbsolutePosition
+        local size = button.AbsoluteSize
+        local centerX = pos.X + size.X / 2
+        local centerY = pos.Y + size.Y / 2 + 58
+        vim:SendMouseButtonEvent(centerX, centerY, 0, true, game, 0)
+        task.wait(0.05)
+        vim:SendMouseButtonEvent(centerX, centerY, 0, false, game, 0)
+    end)
+end
+
+local function performFastSell()
+    if not farmPosition then return end
+    _G.IsSelling = true
+    timeRemaining = sellInterval
+    instantTP(sellPosition)
+    task.wait(0.5)
+    setCharacterFreeze(true) 
+
+    local sellGui = player.PlayerGui:FindFirstChild("SellGUI")
+    local retry = 0
+    while (not sellGui or not sellGui.Enabled) and retry < 12 do
+        vim:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+        task.wait(0.1)
+        vim:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+        task.wait(0.4)
+        sellGui = player.PlayerGui:FindFirstChild("SellGUI")
+        retry = retry + 1
+    end
+
+    if sellGui and sellGui.Enabled then
+        local main = sellGui:FindFirstChild("Main")
+        if main then
+            if main:FindFirstChild("All") then forceClick(main.All) end
+            task.wait(0.6)
+            if main:FindFirstChild("Close") then forceClick(main.Close) end
+        end
+    end
+    task.wait(2.5) 
+    setCharacterFreeze(false)
+    instantTP(farmPosition)
+    _G.IsSelling = false
+end
+
+--- TABS ---
+
+-- TAB 1: INFO & STATISTICS (ĐÃ SỬA ĐỂ KHUNG ITEM TO HƠN - BALO 60)
+local InfoTab = Window:CreateTab("📊 Info", 4483362458)
+InfoTab:CreateSection("Welcome to JICEO SYSTEM")
+InfoTab:CreateLabel("Script Version: 2.0 (Hacker Edition)")
+
+-- Tạo khung chứa inventory với kích thước lớn hơn
+local InvContainer = InfoTab:CreateLabel("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+local InvLabel = InfoTab:CreateLabel("🎒 INVENTORY: 0/60 items")
+local InvLabel2 = InfoTab:CreateLabel("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+local TimeLabel = InfoTab:CreateLabel("⏳ Next Sell in: -- s")
+local InvLabel3 = InfoTab:CreateLabel("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+-- Tạo khung item list riêng với nhiều dòng
+InfoTab:CreateLabel("📦 DANH SÁCH VẬT PHẨM:")
+InfoTab:CreateLabel("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+local ListLabel1 = InfoTab:CreateLabel("⏺ Trống")
+local ListLabel2 = InfoTab:CreateLabel("")
+local ListLabel3 = InfoTab:CreateLabel("")
+local ListLabel4 = InfoTab:CreateLabel("")
+local ListLabel5 = InfoTab:CreateLabel("")
+local ListLabel6 = InfoTab:CreateLabel("")
+local ListLabel7 = InfoTab:CreateLabel("")
+local ListLabel8 = InfoTab:CreateLabel("")
+local ListLabel9 = InfoTab:CreateLabel("")
+local ListLabel10 = InfoTab:CreateLabel("")
+InfoTab:CreateLabel("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+-- Vòng lặp cập nhật thông tin liên tục với khung item to
+task.spawn(function()
+    while true do
+        -- 1. Cập nhật số lượng và danh sách vật phẩm
+        local items = player.Backpack:GetChildren()
+        local count = 0
+        local itemList = {}
+        
+        for _, item in pairs(items) do
+            if item:IsA("Tool") and item.Name ~= "Rod" then
+                count = count + 1
+                table.insert(itemList, item.Name)
+            end
+        end
+        
+        -- Cập nhật inventory chính
+        InvLabel:Set("🎒 INVENTORY: " .. count .. "/60 items")
+        
+        -- Cập nhật danh sách vật phẩm (hiển thị nhiều dòng)
+        if #itemList > 0 then
+            -- Hiển thị mỗi dòng 4 item
+            for i = 1, 10 do
+                local startIdx = (i-1)*4 + 1
+                local lineItems = {}
+                for j = startIdx, math.min(startIdx+3, #itemList) do
+                    table.insert(lineItems, itemList[j])
+                end
+                if #lineItems > 0 then
+                    local lineText = "⏺ " .. table.concat(lineItems, " | ")
+                    if i == 1 then ListLabel1:Set(lineText)
+                    elseif i == 2 then ListLabel2:Set(lineText)
+                    elseif i == 3 then ListLabel3:Set(lineText)
+                    elseif i == 4 then ListLabel4:Set(lineText)
+                    elseif i == 5 then ListLabel5:Set(lineText)
+                    elseif i == 6 then ListLabel6:Set(lineText)
+                    elseif i == 7 then ListLabel7:Set(lineText)
+                    elseif i == 8 then ListLabel8:Set(lineText)
+                    elseif i == 9 then ListLabel9:Set(lineText)
+                    elseif i == 10 then ListLabel10:Set(lineText)
+                    end
+                else
+                    if i == 1 then ListLabel1:Set("⏺ Trống")
+                    elseif i > 1 then
+                        if i == 2 then ListLabel2:Set("")
+                        elseif i == 3 then ListLabel3:Set("")
+                        elseif i == 4 then ListLabel4:Set("")
+                        elseif i == 5 then ListLabel5:Set("")
+                        elseif i == 6 then ListLabel6:Set("")
+                        elseif i == 7 then ListLabel7:Set("")
+                        elseif i == 8 then ListLabel8:Set("")
+                        elseif i == 9 then ListLabel9:Set("")
+                        elseif i == 10 then ListLabel10:Set("")
+                        end
+                    end
+                end
+            end
+        else
+            ListLabel1:Set("⏺ Trống")
+            ListLabel2:Set("")
+            ListLabel3:Set("")
+            ListLabel4:Set("")
+            ListLabel5:Set("")
+            ListLabel6:Set("")
+            ListLabel7:Set("")
+            ListLabel8:Set("")
+            ListLabel9:Set("")
+            ListLabel10:Set("")
+        end
+
+        -- 2. Cập nhật đếm ngược thời gian sell
+        if flags.autoSellTime and not _G.IsSelling then
+            TimeLabel:Set("⏳ Next Sell in: " .. math.max(0, math.floor(timeRemaining)) .. " s")
+            timeRemaining = timeRemaining - 1
+            if timeRemaining <= 0 then
+                performFastSell()
+            end
+        else
+            TimeLabel:Set("⏳ Next Sell in: PAUSED")
+        end
+        
+        task.wait(1)
+    end
+end)
+
+-- TAB 2: AUTO KEYS
+local AutoTab = Window:CreateTab("Auto Keys", 4483345998)
+local keyToggles = {[Enum.KeyCode.Z] = "autoZ", [Enum.KeyCode.X] = "autoX", [Enum.KeyCode.C] = "autoC", [Enum.KeyCode.V] = "autoV"}
+RunService.Heartbeat:Connect(function()
+    for key, flagName in pairs(keyToggles) do
+        if flags[flagName] then
+            vim:SendKeyEvent(true, key, false, game)
+            task.wait(0.02)
+            vim:SendKeyEvent(false, key, false, game)
+            task.wait(0.05)
+        end
+    end
+end)
+AutoTab:CreateToggle({Name = "🚀 Auto Z", CurrentValue = false, Flag = "TZ", Callback = function(v) flags.autoZ = v end})
+AutoTab:CreateToggle({Name = "⚡ Auto X", CurrentValue = false, Flag = "TX", Callback = function(v) flags.autoX = v end})
+AutoTab:CreateToggle({Name = "🟢 Auto C", CurrentValue = false, Flag = "TC", Callback = function(v) flags.autoC = v end})
+AutoTab:CreateToggle({Name = "🔵 Auto V", CurrentValue = false, Flag = "TV", Callback = function(v) flags.autoV = v end})
+
+-- TAB 3: PLAYER
+local PlayerTab = Window:CreateTab("Player", 4483362458)
+PlayerTab:CreateSection("🏃 Movement")
+
+PlayerTab:CreateToggle({
+    Name = "🚀 Speed Hack (No Clip Fix)",
+    CurrentValue = false,
+    Flag = "SpeedHack",
+    Callback = function(v)
+        flags.speedEnabled = v
+        local char = player.Character
+        if char then
+            saveOriginalProps(char)
+            setupSpeedForce(v)
+            if not v then restoreOriginalProps(char) end
+        end
+    end
+})
+
+RunService.Heartbeat:Connect(function()
+    if flags.speedEnabled and player.Character then
+        local humanoid = player.Character:FindFirstChild("Humanoid")
+        local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+        if humanoid and hrp and vectorForce then
+            local state = humanoid:GetState()
+            if state == Enum.HumanoidStateType.Jumping or state == Enum.HumanoidStateType.Freefall or state == Enum.HumanoidStateType.Landed then
+                vectorForce.Force = Vector3.new(0, 0, 0)
+            else
+                local moveDir = humanoid.MoveDirection
+                if moveDir.Magnitude > 0 then
+                    vectorForce.Force = Vector3.new(moveDir.X, 0, moveDir.Z) * (speedValue * 500)
+                else
+                    vectorForce.Force = Vector3.new(0, 0, 0)
+                end
+            end
+        end
+    end
+end)
+
+PlayerTab:CreateToggle({Name = "🦘 Infinite Jump", CurrentValue = false, Flag = "InfJump", Callback = function(v) flags.infJumpEnabled = v end})
+
+UserInputService.JumpRequest:Connect(function()
+    if flags.infJumpEnabled then
+        local character = player.Character
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+PlayerTab:CreateInput({
+    Name = "⚡ Speed Value (16-100)",
+    PlaceholderText = "Default 50",
+    Callback = function(text)
+        local num = tonumber(text)
+        speedValue = (num and num >= 16 and num <= 100) and num or 50
+    end,
+})
+
+PlayerTab:CreateSection("🛠️ Optimization")
+PlayerTab:CreateButton({Name = "🛡️ Fix Lag (Low Graphics)", Callback = function() fixLag() end})
+
+PlayerTab:CreateSection("📍 Quick Teleport")
+PlayerTab:CreateButton({Name = "💰 TP Point Sell", Callback = function() instantTP(Vector3.new(171.03, 22.71, 71.14)) end})
+PlayerTab:CreateButton({Name = "👤 TP BI HUYNH", Callback = function() instantTP(Vector3.new(145.25, 29.06, -114.44)) end})
+PlayerTab:CreateButton({Name = "👤 TP Yune Khangg", Callback = function() instantTP(Vector3.new(622.27, 20.97, 1328.90)) end})
+PlayerTab:CreateButton({Name = "👤 TP TGaming", Callback = function() instantTP(Vector3.new(586.54, 21.32, -915.99)) end})
+PlayerTab:CreateSection("✨ Next Update :)))")
+
+-- TAB 4: TITAN FISCH
+local FischTab = Window:CreateTab("Titan Fisch", 7072742186)
+FischTab:CreateSection("📍 Position")
+FischTab:CreateButton({
+    Name = "🚩 Set Farm Position",
+    Callback = function()
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            farmPosition = player.Character.HumanoidRootPart.CFrame
+            Rayfield:Notify({Title = "JICEO", Content = "Vị trí farm đã được lưu!", Duration = 3})
+        end
+    end,
+})
+FischTab:CreateToggle({
+    Name = "🏠 Auto Return Point",
+    CurrentValue = false,
+    Flag = "RetP",
+    Callback = function(v)
+        flags.autoReturn = v
+        task.spawn(function()
+            while flags.autoReturn do
+                if farmPosition and not _G.IsSelling then
+                    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp and (hrp.Position - farmPosition.Position).Magnitude > 8 then instantTP(farmPosition) end
+                end
+                task.wait(1.5)
+            end
+        end)
+    end,
+})
+
+FischTab:CreateSection("🎣 Auto Fishing")
+FischTab:CreateToggle({
+    Name = "🎣 Auto Cast",
+    CurrentValue = false,
+    Flag = "AutoCast",
+    Callback = function(v)
+        flags.autoCast = v
+        task.spawn(function()
+            while flags.autoCast do
+                if not _G.IsSelling and player.Character:FindFirstChildOfClass("Tool") then
+                    vim:SendMouseButtonEvent(500, 500, 0, true, game, 0)
+                    task.wait(0.5)
+                    vim:SendMouseButtonEvent(500, 500, 0, false, game, 0)
+                end
+                task.wait(1.5)
+            end
+        end)
+    end,
+})
+
+FischTab:CreateSection("💰 Advanced Sell System")
+FischTab:CreateInput({
+    Name = "⏱️ Sell Interval (Seconds)",
+    PlaceholderText = "Default 60...",
+    Callback = function(t) 
+        sellInterval = tonumber(t) or 60 
+        timeRemaining = sellInterval
+    end,
+})
+FischTab:CreateToggle({
+    Name = "⏳ Auto Sell (By Time)",
+    CurrentValue = false,
+    Flag = "SellT",
+    Callback = function(v) 
+        flags.autoSellTime = v 
+        if v then timeRemaining = sellInterval end
+    end,
+})
+FischTab:CreateToggle({
+    Name = "🎒 Auto Sell (If Full 60)",
+    CurrentValue = false,
+    Flag = "SellF",
+    Callback = function(v)
+        flags.autoSellFull = v
+        task.spawn(function()
+            while flags.autoSellFull do
+                local count = 0
+                for _, item in pairs(player.Backpack:GetChildren()) do
+                    if item:IsA("Tool") and item.Name ~= "Rod" then count = count + 1 end
+                end
+                if count >= 60 and not _G.IsSelling then performFastSell() end
+                task.wait(5)
+            end
+        end)
+    end,
+})
+
+-- TAB 5: TELEPORT (TP) - ĐÃ THÊM TÍNH NĂNG ĐÓNG BĂNG 5 GIÂY
+local TPTab = Window:CreateTab("TP", 4483362458)
+TPTab:CreateSection("🏝️ Island List (Freeze 5s khi TP)")
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 1", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(252.70, 29.84, 58.19), "Island 1")
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 2", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(1770.43, 20.45, -386.22), "Island 2")
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 3", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(887.17, 21.85, 1249.59), "Island 3")
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 4", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(648.36, 28.14, -882.51), "Island 4")
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 5", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(-397.76, 24.02, 1055.27), "Island 5")
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 6", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(-757, 25, -282), "Island 6")
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 7", 
+    Callback = function() 
+        tpWithFreeze(Vector3.new(-739, 27, -1290), "Island 7")
+    end
+})
+
+TPTab:CreateSection("⏩ Next Islands")
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 8", 
+    Callback = function() 
+        Rayfield:Notify({
+            Title = "Thông báo", 
+            Content = "Vui lòng cập nhật tọa độ Island 8", 
+            Duration = 3
+        })
+    end
+})
+
+TPTab:CreateButton({
+    Name = "🏝️ Island 9", 
+    Callback = function() 
+        Rayfield:Notify({
+            Title = "Thông báo", 
+            Content = "Vui lòng cập nhật tọa độ Island 9", 
+            Duration = 3
+        })
+    end
+})
+
+Rayfield:LoadConfiguration()
+Rayfield:Notify({
+    Title = "JICEO SYSTEM",
+    Content = "Script đã tải xong! Chúc bạn farm vui vẻ.",
+    Duration = 5
+})
