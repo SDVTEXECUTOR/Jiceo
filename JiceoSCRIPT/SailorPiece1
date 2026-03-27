@@ -1,0 +1,350 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local TweenService = game:GetService("TweenService")
+
+local Window = Rayfield:CreateWindow({
+   Name = "JICEO | Sailor Piece FULL",
+   LoadingTitle = "Đang tải Timer & Logic Ưu Tiên...",
+   LoadingSubtitle = "by Jiceo",
+   ConfigurationSaving = {Enabled = true, FolderName = "JiceoSailorPiece", FileName = "Config"},
+   KeySystem = false, 
+})
+
+-- Biến điều khiển
+local _G = _G or {}
+_G.TweenSpeed = 150 
+_G.SelectedBosses = {} 
+_G.AutoSkills = {Z = false, X = false, C = false, V = false, F = false}
+_G.AutoTools = {Tool1 = false, Tool2 = false, Tool3 = false}
+
+-- Danh sách Ưu tiên (Alucard -> Shinobi) - ĐÃ THÊM ORDER
+local priorityList = {
+    {Name = "Alucard", ID = "AlucardBoss", Island = "Sailor", Order = 1},
+    {Name = "Jinwoo", ID = "JinwooBoss", Island = "Sailor", Order = 2},
+    {Name = "Gojo", ID = "GojoBoss", Island = "Shibuya", Order = 3},
+    {Name = "Yuji", ID = "YujiBoss", Island = "Shibuya", Order = 4},
+    {Name = "Sukuna", ID = "SukunaBoss", Island = "Shibuya", Order = 5},
+    {Name = "Aizen", ID = "AizenBoss", Island = "HollowIsland", Order = 6},
+    {Name = "Yamato", ID = "YamatoBoss", Island = "Judgement", Order = 7},
+    {Name = "Strongest Shinobi", ID = "StrongestShinobiBoss", Island = "Ninja", Order = 8}
+}
+
+-- 🎯 SẮP XẾP THEO ORDER (CHỈ DÒNG NÀY LÀ MỚI)
+table.sort(priorityList, function(a, b) return a.Order < b.Order end)
+
+-- Hàm tìm Boss sống
+local function FindLivingBoss(bossID)
+    local npcFolder = game.Workspace:FindFirstChild("NPCs")
+    local boss = (npcFolder and npcFolder:FindFirstChild(bossID)) or game.Workspace:FindFirstChild(bossID, true)
+    if boss and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
+        return boss
+    end
+    return nil
+end
+
+-- Hàm sử dụng tool theo vị trí
+local function UseTool(toolPosition)
+    local character = game.Players.LocalPlayer.Character
+    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    -- Tìm tool trong backpack hoặc character
+    local tool = nil
+    local backpack = game.Players.LocalPlayer.Backpack
+    
+    -- Kiểm tra trong Backpack trước
+    for _, item in pairs(backpack:GetChildren()) do
+        if item:IsA("Tool") then
+            local toolName = string.lower(item.Name)
+            if toolPosition == 1 and (toolName:find("1") or toolName:find("one") or toolName:find("slot1")) then
+                tool = item
+                break
+            elseif toolPosition == 2 and (toolName:find("2") or toolName:find("two") or toolName:find("slot2")) then
+                tool = item
+                break
+            elseif toolPosition == 3 and (toolName:find("3") or toolName:find("three") or toolName:find("slot3")) then
+                tool = item
+                break
+            end
+        end
+    end
+    
+    -- Nếu không tìm thấy trong Backpack, kiểm tra trong Character
+    if not tool then
+        for _, item in pairs(character:GetChildren()) do
+            if item:IsA("Tool") then
+                local toolName = string.lower(item.Name)
+                if toolPosition == 1 and (toolName:find("1") or toolName:find("one") or toolName:find("slot1")) then
+                    tool = item
+                    break
+                elseif toolPosition == 2 and (toolName:find("2") or toolName:find("two") or toolName:find("slot2")) then
+                    tool = item
+                    break
+                elseif toolPosition == 3 and (toolName:find("3") or toolName:find("three") or toolName:find("slot3")) then
+                    tool = item
+                    break
+                end
+            end
+        end
+    end
+    
+    -- Sử dụng tool nếu tìm thấy
+    if tool then
+        -- Đưa tool vào tay nếu chưa có
+        if tool.Parent ~= character then
+            tool.Parent = character
+            task.wait(0.1)
+        end
+        
+        -- Kích hoạt tool
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid:EquipTool(tool)
+            task.wait(0.1)
+            
+            -- Gửi yêu cầu sử dụng tool
+            local toolRemote = game:GetService("ReplicatedStorage"):FindFirstChild("ToolSystem") or 
+                              game:GetService("ReplicatedStorage"):FindFirstChild("Remotes"):FindFirstChild("UseTool")
+            if toolRemote then
+                toolRemote:FireServer(tool)
+            end
+            
+            -- Thử activation nếu có
+            if tool:FindFirstChild("Activate") then
+                tool:Activate()
+            end
+        end
+    end
+end
+
+-- Hàm ổn định & Ngả người
+local function Stabilize(hrp)
+    if not hrp:FindFirstChild("JiceoVelocity") then
+        local bv = Instance.new("BodyVelocity", hrp)
+        bv.Name = "JiceoVelocity"
+        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        bv.Velocity = Vector3.new(0,0,0)
+        
+        local bg = Instance.new("BodyGyro", hrp)
+        bg.Name = "JiceoGyro"
+        bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bg.P = 30000
+    end
+end
+
+--- ### TAB 1: INFO STATUS (CÓ TIMER REAL-TIME) ---
+local Tab1 = Window:CreateTab("Info Status", 4483362458)
+local statusLabels = {}
+
+for _, config in pairs(priorityList) do
+    statusLabels[config.ID] = Tab1:CreateLabel(config.Name .. ": 🔴 Checking...")
+end
+
+-- Vòng lặp cập nhật Timer liên tục
+spawn(function()
+    while true do
+        for _, config in pairs(priorityList) do
+            local boss = FindLivingBoss(config.ID)
+            if boss then
+                statusLabels[config.ID]:Set(config.Name .. ": 🟢 ALIVE")
+            else
+                -- CODE LẤY TIME REAL ĐÂY: Quét đúng Container trong Workspace
+                local container = game.Workspace:FindFirstChild("TimedBossSpawn_" .. config.ID .. "_Container", true)
+                local timeStr = "N/A"
+                if container then
+                    local mainObj = container:FindFirstChild("TimedBossSpawn_" .. config.ID)
+                    local timerPart = mainObj and mainObj:FindFirstChild("Timer", true)
+                    if timerPart and timerPart:IsA("TextLabel") then
+                        timeStr = timerPart.Text
+                    elseif timerPart and timerPart:IsA("SurfaceGui") then
+                        local lbl = timerPart:FindFirstChildWhichIsA("TextLabel", true)
+                        if lbl then timeStr = lbl.Text end
+                    end
+                end
+                statusLabels[config.ID]:Set(config.Name .. ": 🔴 Respawning: " .. timeStr)
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+--- ### TAB 2: FARM BOSS ---
+local Tab2 = Window:CreateTab("Farm Boss", 4483362458)
+Tab2:CreateSlider({
+   Name = "Tween Speed",
+   Range = {100, 1000},
+   Increment = 50,
+   CurrentValue = 350,
+   Callback = function(v) _G.TweenSpeed = v end,
+})
+
+-- Tạo Toggle cho từng Boss
+for _, config in pairs(priorityList) do
+    _G.SelectedBosses[config.ID] = false
+    Tab2:CreateToggle({
+       Name = "Farm " .. config.Name,
+       CurrentValue = false,
+       Callback = function(Value)
+          _G.SelectedBosses[config.ID] = Value
+       end,
+    })
+end
+
+-- VÒNG LẶP ĐIỀU KHIỂN CHÍNH (Xử lý Ưu tiên + Ngả người + Loop Hit + Auto Tools)
+spawn(function()
+    local currentIsland = ""
+    local lastToolUse = {0, 0, 0} -- Thời gian sử dụng tool lần cuối
+    local toolCooldown = 2 -- Cooldown 2 giây giữa các lần sử dụng tool
+    
+    while true do
+        task.wait()
+        local character = game.Players.LocalPlayer.Character
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+        if not hrp then continue end
+
+        local targetBoss = nil
+        local targetConfig = nil
+
+        -- Logic Ưu tiên: Duyệt theo thứ tự Order, tick cái nào cao hơn đánh trước
+        for _, config in pairs(priorityList) do
+            if _G.SelectedBosses[config.ID] then
+                local boss = FindLivingBoss(config.ID)
+                if boss then
+                    targetBoss = boss
+                    targetConfig = config
+                    break 
+                end
+            end
+        end
+
+        if targetBoss and targetConfig then
+            -- Chuyển đảo
+            if currentIsland ~= targetConfig.Island then
+                game:GetService("ReplicatedStorage").Remotes.TeleportToPortal:FireServer(targetConfig.Island)
+                task.wait(2)
+                currentIsland = targetConfig.Island
+                if targetConfig.ID == "GojoBoss" then
+                    hrp.CFrame = CFrame.new(1858.32, 32.98, 338.14)
+                    task.wait(1)
+                end
+            end
+
+            -- Tấn công & Ngả người
+            local targetHrp = targetBoss:FindFirstChild("HumanoidRootPart")
+            if targetHrp then
+                Stabilize(hrp)
+                -- Ngả người 90 độ xuống Boss
+                local targetPos = targetHrp.CFrame * CFrame.new(0, 12, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+                local dist = (hrp.Position - targetPos.Position).Magnitude
+
+                if dist > 15 then
+                    TweenService:Create(hrp, TweenInfo.new(dist/_G.TweenSpeed, Enum.EasingStyle.Linear), {CFrame = targetPos}):Play()
+                else
+                    hrp.CFrame = targetPos
+                    -- Loop Skill liên tục
+                    local skillRemote = game:GetService("ReplicatedStorage").AbilitySystem.Remotes.RequestAbility
+                    if _G.AutoSkills.Z then skillRemote:FireServer(1) end
+                    if _G.AutoSkills.X then skillRemote:FireServer(2) end
+                    if _G.AutoSkills.C then skillRemote:FireServer(3) end
+                    if _G.AutoSkills.V then skillRemote:FireServer(4) end
+                    if _G.AutoSkills.F then skillRemote:FireServer(5) end
+                    
+                    -- Auto sử dụng tools
+                    local currentTime = tick()
+                    
+                    -- Tool 1
+                    if _G.AutoTools.Tool1 and (currentTime - lastToolUse[1]) >= toolCooldown then
+                        UseTool(1)
+                        lastToolUse[1] = currentTime
+                    end
+                    
+                    -- Tool 2
+                    if _G.AutoTools.Tool2 and (currentTime - lastToolUse[2]) >= toolCooldown then
+                        UseTool(2)
+                        lastToolUse[2] = currentTime
+                    end
+                    
+                    -- Tool 3
+                    if _G.AutoTools.Tool3 and (currentTime - lastToolUse[3]) >= toolCooldown then
+                        UseTool(3)
+                        lastToolUse[3] = currentTime
+                    end
+                end
+                -- Loop Chém liên tục
+                game:GetService("ReplicatedStorage").CombatSystem.Remotes.RequestHit:FireServer()
+            end
+        else
+            -- Dọn dẹp lực khi không đánh Boss
+            if hrp:FindFirstChild("JiceoVelocity") then hrp.JiceoVelocity:Destroy() end
+            if hrp:FindFirstChild("JiceoGyro") then hrp.JiceoGyro:Destroy() end
+            currentIsland = ""
+        end
+    end
+end)
+
+--- ### TAB 3: SETTINGS ---
+local Tab3 = Window:CreateTab("Settings", 4483362458)
+Tab3:CreateButton({
+   Name = "Fix Lag",
+   Callback = function()
+       for _, v in pairs(game.Workspace:GetDescendants()) do
+           if v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end
+       end
+   end,
+})
+
+Tab3:CreateSection("Auto Skill Setup")
+Tab3:CreateToggle({ Name = "Auto Skill Z", Callback = function(v) _G.AutoSkills.Z = v end })
+Tab3:CreateToggle({ Name = "Auto Skill X", Callback = function(v) _G.AutoSkills.X = v end })
+Tab3:CreateToggle({ Name = "Auto Skill C", Callback = function(v) _G.AutoSkills.C = v end })
+Tab3:CreateToggle({ Name = "Auto Skill V", Callback = function(v) _G.AutoSkills.V = v end })
+Tab3:CreateToggle({ Name = "Auto Skill F", Callback = function(v) _G.AutoSkills.F = v end })
+
+-- Thêm section cho Auto Tools
+Tab3:CreateSection("Auto Tools")
+Tab3:CreateToggle({ 
+    Name = "Auto Tool Slot 1", 
+    CurrentValue = false,
+    Callback = function(v) 
+        _G.AutoTools.Tool1 = v 
+        if v then
+            print("Đã bật Auto Tool Slot 1")
+        else
+            print("Đã tắt Auto Tool Slot 1")
+        end
+    end 
+})
+
+Tab3:CreateToggle({ 
+    Name = "Auto Tool Slot 2", 
+    CurrentValue = false,
+    Callback = function(v) 
+        _G.AutoTools.Tool2 = v 
+        if v then
+            print("Đã bật Auto Tool Slot 2")
+        else
+            print("Đã tắt Auto Tool Slot 2")
+        end
+    end 
+})
+
+Tab3:CreateToggle({ 
+    Name = "Auto Tool Slot 3", 
+    CurrentValue = false,
+    Callback = function(v) 
+        _G.AutoTools.Tool3 = v 
+        if v then
+            print("Đã bật Auto Tool Slot 3")
+        else
+            print("Đã tắt Auto Tool Slot 3")
+        end
+    end 
+})
+
+-- Thêm thông tin hướng dẫn
+Tab3:CreateSection("Tool Usage Info")
+Tab3:CreateParagraph({
+    Name = "Hướng dẫn:",
+    Content = "• Auto Tool sẽ tự động sử dụng tool khi đang đánh boss\n• Tool sẽ được kích hoạt theo vị trí Slot (1, 2, 3)\n• Có cooldown 2 giây giữa các lần sử dụng\n• Tool cần nằm trong Backpack hoặc Character"
+})
+
+Rayfield:LoadConfiguration()
