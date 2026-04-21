@@ -3,1386 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JICEO</title>
+    <title>Master Family Guild Invite</title>
     <style>
-        :root { 
-            --neon: #00ffcc; 
-            --neon-glow: rgba(0, 255, 204, 0.3);
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #13131f;
-            --bg-tertiary: #1a1a2e;
-            --panel: #16213e;
-            --glass: rgba(22, 33, 62, 0.7);
-            --gray: #2a2a4a;
-            --danger: #ff4d6d;
-            --success: #4caf50;
-            --warning: #ffaa00;
-            --text-primary: #e0e0ff;
-            --text-secondary: #a0a0cc;
-            --gradient-1: linear-gradient(135deg, #00ffcc, #00ccff);
-            --gradient-2: linear-gradient(135deg, #16213e, #1a1a2e);
-            --shadow-neon: 0 0 30px var(--neon-glow);
-            --glass-effect: blur(10px);
-        }
-        
+        /* --- Phông chữ và Cài đặt cơ bản --- */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        body { 
-            background: var(--bg-primary);
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(0, 255, 204, 0.05) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(0, 255, 204, 0.05) 0%, transparent 20%),
-                linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-            color: var(--text-primary); 
-            font-family: 'Inter', 'Consolas', monospace; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
+        body, html {
+            width: 100%;
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Ngăn cuộn trang */
+            background-color: #050510; /* Màu nền tối sâu */
         }
 
-        /* Hiệu ứng hạt điện tử */
-        body::before {
-            content: '';
-            position: fixed;
+        /* --- Vùng chứa chính (Căn giữa mọi thứ) --- */
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2; /* Nằm trên lớp nền */
+            text-align: center;
+            color: #ffffff;
+            padding: 20px;
+        }
+
+        /* --- Lớp nền Hạt hạt chuyển động --- */
+        .background-particles {
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="1" fill="%2300ffcc" opacity="0.2"/></svg>');
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .container { 
-            background: var(--glass);
-            backdrop-filter: var(--glass-effect);
-            -webkit-backdrop-filter: var(--glass-effect);
-            padding: 1.8rem; 
-            border-radius: 24px; 
-            border: 1px solid var(--neon); 
-            box-shadow: var(--shadow-neon); 
-            width: 100%;
-            max-width: 900px; 
-            position: relative;
             z-index: 1;
+            /* Hiệu ứng gradient nền và hạt giả lập bằng background-image */
+            background: 
+                radial-gradient(circle at 10% 10%, rgba(0, 150, 255, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(150, 0, 255, 0.1) 0%, transparent 40%),
+                radial-gradient(white, rgba(255,255,255,.05) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 80px 80px;
+            animation: particleAnimation 60s linear infinite;
+            opacity: 0.6;
         }
 
-        h2 { 
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-transform: uppercase; 
-            margin: 0 0 20px 0; 
-            font-size: 1.8rem; 
-            letter-spacing: 4px;
-            text-align: center;
+        @keyframes particleAnimation {
+            from { background-position: 0 0, 0 0, 0 0; }
+            to { background-position: 0 0, 0 0, 1000px 1000px; }
+        }
+
+        /* --- Tiêu đề chính MASTER FAMILY | #1 (Hiệu ứng Neon) --- */
+        .title {
+            font-size: 3.5rem;
             font-weight: 700;
-            text-shadow: 0 0 20px var(--neon-glow);
-        }
-
-        /* Tabs */
-        .tabs {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 25px;
-            padding: 5px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 50px;
-            border: 1px solid rgba(0, 255, 204, 0.2);
-        }
-
-        .tab-btn {
-            background: transparent;
-            color: var(--text-secondary);
-            border: none;
-            padding: 12px 20px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-            border-radius: 40px;
-            flex: 1;
-            letter-spacing: 1px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .tab-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: var(--neon-glow);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-            z-index: -1;
-        }
-
-        .tab-btn:hover {
-            color: var(--neon);
-        }
-
-        .tab-btn:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .tab-btn.active {
-            background: var(--gradient-1);
-            color: var(--bg-primary);
-            font-weight: 700;
-            box-shadow: 0 0 20px var(--neon);
-        }
-
-        .tab-content {
-            display: none;
-            min-height: 500px;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Script Tab */
-        .script-container {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--gray);
-            border-radius: 16px;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .script-title {
-            font-size: 2rem;
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-
-        .code-box {
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid var(--neon);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            position: relative;
-            box-shadow: 0 0 20px var(--neon-glow);
-        }
-
-        .code-text {
-            color: var(--neon);
-            font-family: 'Consolas', monospace;
-            font-size: 0.9rem;
-            word-break: break-all;
-            line-height: 1.6;
-            text-align: left;
-        }
-
-        .copy-script-btn {
-            background: rgba(0, 255, 204, 0.1);
-            color: var(--neon);
-            border: 1px solid var(--neon);
-            padding: 12px 30px;
-            border-radius: 30px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
             text-transform: uppercase;
             letter-spacing: 2px;
-            font-weight: 600;
-            margin-top: 20px;
-        }
-
-        .copy-script-btn:hover {
-            background: var(--neon);
-            color: var(--bg-primary);
-            box-shadow: 0 0 30px var(--neon);
-            transform: scale(1.05);
-        }
-
-        /* Thông báo Succhal */
-        .succhal-notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--gradient-1);
-            color: var(--bg-primary);
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 1.2rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            box-shadow: 0 0 40px var(--neon);
-            transform: translateX(400px);
-            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            z-index: 1000;
-            border: 2px solid white;
-        }
-
-        .succhal-notification.show {
-            transform: translateX(0);
-        }
-
-        .succhal-notification::before {
-            content: '⚡';
-            margin-right: 10px;
-            animation: spin 2s linear infinite;
-        }
-
-        .succhal-notification::after {
-            content: '⚡';
-            margin-left: 10px;
-            animation: spin 2s linear infinite reverse;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        /* Generator Tab */
-        .key-container { 
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--gray); 
-            border-radius: 16px; 
-            margin: 20px 0; 
-            padding: 25px; 
-            position: relative; 
-            min-height: 100px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            flex-direction: column;
-            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .key-text { 
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 1rem; 
-            word-break: break-all; 
-            margin-bottom: 15px; 
-            line-height: 1.6;
-            font-weight: 500;
-        }
-
-        .copy-btn { 
-            background: rgba(0, 255, 204, 0.1);
-            color: var(--neon); 
-            border: 1px solid var(--neon); 
-            padding: 8px 25px; 
-            border-radius: 30px; 
-            font-size: 0.8rem; 
-            cursor: pointer; 
-            transition: all 0.3s; 
-            visibility: hidden;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-
-        .copy-btn.active { 
-            visibility: visible; 
-        }
-
-        .copy-btn:hover { 
-            background: var(--neon); 
-            color: var(--bg-primary);
-            box-shadow: 0 0 30px var(--neon);
-            transform: scale(1.05);
-        }
-
-        .btn-gen { 
-            background: var(--gradient-1);
-            color: var(--bg-primary); 
-            border: none; 
-            padding: 16px 30px; 
-            border-radius: 50px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            width: 100%; 
-            text-transform: uppercase; 
-            transition: all 0.3s;
-            font-size: 1rem;
-            letter-spacing: 2px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-gen::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn-gen:hover::before {
-            left: 100%;
-        }
-
-        .btn-gen:disabled { 
-            background: linear-gradient(135deg, #333, #444);
-            color: #666; 
-            cursor: wait;
-            opacity: 0.5;
-        }
-
-        .btn-gen:hover:not(:disabled) { 
-            box-shadow: 0 0 40px var(--neon); 
-            transform: translateY(-2px);
-        }
-
-        /* Status Tab */
-        .key-list {
-            max-height: 400px;
-            overflow-y: auto;
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 16px;
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        .key-item {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--gray);
-            border-radius: 12px;
-            padding: 12px 16px;
+            color: #ffffff;
+            /* Hiệu ứng đổ bóng chữ neon phức tạp */
+            text-shadow: 
+                0 0 5px rgba(255, 255, 255, 0.8),
+                0 0 10px rgba(0, 200, 255, 0.6),
+                0 0 20px rgba(0, 200, 255, 0.4),
+                0 0 40px rgba(0, 200, 255, 0.2);
             margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.3s;
-            backdrop-filter: blur(5px);
+            /* Hiệu ứng nhấp nháy nhẹ */
+            animation: titlePulse 3s ease-in-out infinite alternate;
         }
 
-        .key-item:hover {
-            border-color: var(--neon);
-            transform: translateX(5px);
-            box-shadow: -5px 0 20px var(--neon-glow);
+        @keyframes titlePulse {
+            from { opacity: 1; text-shadow: 0 0 5px rgba(255, 255, 255, 0.8), 0 0 10px rgba(0, 200, 255, 0.6); }
+            to { opacity: 0.9; text-shadow: 0 0 10px rgba(255, 255, 255, 1), 0 0 20px rgba(0, 200, 255, 0.8), 0 0 30px rgba(0, 200, 255, 0.6); }
         }
 
-        .key-info {
-            flex: 1;
-            text-align: left;
-            overflow: hidden;
+        /* --- Dòng mô tả (Sub-title) --- */
+        .subtitle {
+            font-size: 1.1rem;
+            color: #b9bbbe; /* Màu xám nhẹ của Discord */
+            margin-bottom: 40px;
+            font-weight: 400;
         }
 
-        .key-value {
-            color: var(--neon);
-            font-weight: 600;
-            display: block;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 4px;
-        }
-
-        .countdown {
-            color: var(--warning);
-            font-size: 0.7rem;
-            display: block;
-            font-weight: 500;
-        }
-
-        .delete-btn {
-            background: rgba(255, 77, 109, 0.1);
-            border: 1px solid var(--danger);
-            color: var(--danger);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
+        /* --- Nút bấm KẾT NỐI NGAY --- */
+        .discord-btn {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
-            transition: all 0.3s;
-            margin-left: 15px;
-        }
-
-        .delete-btn:hover {
-            background: var(--danger);
-            color: white;
-            transform: rotate(180deg) scale(1.1);
-            box-shadow: 0 0 20px var(--danger);
-        }
-
-        .max-key-warning {
-            color: var(--danger);
-            font-size: 0.9rem;
-            margin-top: 15px;
-            display: none;
-            padding: 10px;
-            border-radius: 8px;
-            background: rgba(255, 77, 109, 0.1);
-            border: 1px solid var(--danger);
-        }
-
-        .max-key-warning.active {
-            display: block;
-        }
-
-        /* CHAT TAB */
-        .chat-wrapper {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 24px;
-            overflow: hidden;
-            border: 1px solid rgba(0, 255, 204, 0.2);
-            backdrop-filter: blur(10px);
-        }
-
-        .auth-container {
-            padding: 40px 30px;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.5);
-        }
-
-        .auth-form {
-            max-width: 350px;
-            margin: 0 auto;
-        }
-
-        .auth-form h3 {
-            color: var(--neon);
-            margin-bottom: 30px;
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .auth-input-group {
-            position: relative;
-            margin-bottom: 25px;
-        }
-
-        .auth-input-group input {
-            width: 100%;
-            padding: 15px 20px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid var(--gray);
-            border-radius: 50px;
-            color: white;
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .auth-input-group input:focus {
-            outline: none;
-            border-color: var(--neon);
-            box-shadow: 0 0 30px var(--neon-glow);
-        }
-
-        .auth-input-group label {
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            pointer-events: none;
-            transition: all 0.3s;
-            background: transparent;
-            padding: 0 5px;
-        }
-
-        .auth-input-group input:focus ~ label,
-        .auth-input-group input:valid ~ label {
-            top: 0;
-            font-size: 0.8rem;
-            background: var(--bg-secondary);
-            color: var(--neon);
-        }
-
-        .auth-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-        }
-
-        .auth-btn {
-            flex: 1;
-            padding: 14px;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #0077ff 0%, #00d4ff 100%);
             border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 1.2rem;
             font-weight: 600;
+            text-decoration: none;
             text-transform: uppercase;
-            transition: all 0.3s;
             letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 150, 255, 0.5); /* Đổ bóng phát sáng */
             position: relative;
             overflow: hidden;
         }
 
-        .login-btn {
-            background: var(--gradient-1);
-            color: var(--bg-primary);
+        /* Hiệu ứng khi di chuột qua nút (Hover) */
+        .discord-btn:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 0 35px rgba(0, 150, 255, 0.8);
         }
 
-        .register-btn {
-            background: transparent;
-            border: 2px solid var(--neon);
-            color: var(--neon);
+        /* Hiệu ứng khi nhấn nút (Active) */
+        .discord-btn:active {
+            transform: translateY(-1px) scale(1);
         }
 
-        .auth-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 30px var(--neon);
+        /* Logo Discord bên trong nút */
+        .discord-icon {
+            margin-right: 12px;
+            width: 28px;
+            height: 28px;
+            fill: #ffffff; /* Màu logo trắng */
+            filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
         }
 
-        /* Chat Container */
-        .chat-container {
-            display: none;
-            height: 500px;
-            flex-direction: column;
+        /* --- Dòng chữ dưới nút --- */
+        .footer-text {
+            font-size: 1rem;
+            color: #8e9297;
+            margin-top: 15px;
+            font-weight: 400;
         }
 
-        .chat-container.active {
-            display: flex;
-        }
-
-        .chat-header {
-            padding: 20px 25px;
-            background: rgba(0, 0, 0, 0.5);
-            border-bottom: 1px solid rgba(0, 255, 204, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: var(--gradient-1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: var(--bg-primary);
-            border: 2px solid var(--neon);
-            box-shadow: 0 0 20px var(--neon);
-        }
-
-        .user-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .user-name {
-            color: var(--neon);
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .user-status {
-            color: var(--success);
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--success);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        .logout-btn {
-            background: rgba(255, 77, 109, 0.1);
-            border: 1px solid var(--danger);
-            color: var(--danger);
-            padding: 8px 20px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .logout-btn:hover {
-            background: var(--danger);
-            color: white;
-            box-shadow: 0 0 20px var(--danger);
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 25px;
-            background: rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .message-wrapper {
-            display: flex;
-            flex-direction: column;
-            max-width: 80%;
-        }
-
-        .message-wrapper.own-message {
-            align-self: flex-end;
-        }
-
-        .message-bubble {
-            padding: 12px 18px;
-            border-radius: 20px;
-            position: relative;
-            word-break: break-word;
-            animation: messagePop 0.3s ease;
-        }
-
-        @keyframes messagePop {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        .own-message .message-bubble {
-            background: var(--gradient-1);
-            color: var(--bg-primary);
-            border-bottom-right-radius: 4px;
-        }
-
-        .other-message .message-bubble {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--gray);
-            color: var(--text-primary);
-            border-bottom-left-radius: 4px;
-        }
-
-        .message-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 5px;
-            font-size: 0.75rem;
-        }
-
-        .own-message .message-info {
-            justify-content: flex-end;
-        }
-
-        .message-sender {
-            font-weight: 600;
-            color: var(--neon);
-        }
-
-        .message-time {
-            color: var(--text-secondary);
-        }
-
-        .message-content {
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-
-        .chat-input-area {
-            padding: 20px 25px;
-            background: rgba(0, 0, 0, 0.5);
-            border-top: 1px solid rgba(0, 255, 204, 0.2);
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .chat-input-wrapper {
-            flex: 1;
-            position: relative;
-        }
-
-        .chat-input {
-            width: 100%;
-            padding: 15px 25px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid var(--gray);
-            border-radius: 50px;
-            color: white;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            transition: all 0.3s;
-        }
-
-        .chat-input:focus {
-            outline: none;
-            border-color: var(--neon);
-            box-shadow: 0 0 30px var(--neon-glow);
-        }
-
-        .send-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--gradient-1);
-            border: none;
-            color: var(--bg-primary);
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .send-btn:hover {
-            transform: scale(1.1) rotate(45deg);
-            box-shadow: 0 0 30px var(--neon);
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--gradient-1);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--neon);
-        }
-
-        .status-bar { 
-            font-size: 0.8rem; 
-            color: var(--text-secondary); 
-            margin-top: 20px; 
-            text-align: right;
-            padding: 10px;
-            border-top: 1px solid rgba(0, 255, 204, 0.2);
-        }
-
-        /* Emoji picker style */
-        .emoji-btn {
-            background: transparent;
-            border: none;
-            color: var(--neon);
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            padding: 0 5px;
-        }
-
-        .emoji-btn:hover {
-            transform: scale(1.2);
-        }
-
-        /* Typing indicator */
-        .typing-indicator {
-            display: flex;
-            gap: 3px;
-            padding: 10px 15px;
-            background: var(--bg-tertiary);
-            border-radius: 20px;
-            width: fit-content;
-            margin-top: 5px;
-        }
-
-        .typing-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--neon);
-            border-radius: 50%;
-            animation: typingAnimation 1.4s infinite;
-        }
-
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes typingAnimation {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-10px); }
-        }
     </style>
 </head>
 <body>
 
-<div class="succhal-notification" id="succhalNotification">
-    SUCCHAL THÀNH CÔNG
-</div>
+    <div class="background-particles"></div>
 
-<div class="container">
-    <h2>JICEO FUTURE SYSTEM</h2>
-    
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('script')">SCRIPT</button>
-        <button class="tab-btn" onclick="switchTab('generator')">GENERATOR</button>
-        <button class="tab-btn" onclick="switchTab('status')">STATUS</button>
-        <button class="tab-btn" onclick="switchTab('chat')">CHAT</button>
+    <div class="container">
+        <h1 class="title">MASTER FAMILY | #1</h1>
+        
+        <p class="subtitle">Nếu bạn là thành viên Guild thì hãy vô Discord ngay nhé!</p>
+        
+        <a href="https://discord.gg/p7JeuXgRwX" class="discord-btn" target="_blank">
+            <svg class="discord-icon" viewBox="0 0 127.14 96.36">
+                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.71,32.65-1.87,56.6.38,80.1a105.77,105.77,0,0,0,32.63,16.26,77.7,77.7,0,0,0,6.89-11.11,64.8,64.8,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a64.59,64.59,0,0,1-10.85,5.18,77.39,77.39,0,0,0,6.89,11.11,105.2,105.2,0,0,0,32.63-16.26C129.58,52.86,124.4,28.9,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5.12-12.67,11.41-12.67S54,46,53.86,53,48.74,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.21,60,73.21,53s5.12-12.67,11.41-12.67S96,46,95.91,53,90.79,65.69,84.69,65.69Z"/>
+            </svg>
+            KẾT NỐI NGAY
+        </a>
+        
+        <p class="footer-text">Tham gia ngay Discord</p>
     </div>
-
-    <!-- Tab 1: Script - JICEO -->
-    <div id="script-tab" class="tab-content active">
-        <div class="script-container">
-            <div class="script-title">⚡ JICEO SCRIPT ⚡</div>
-            <div class="code-box">
-                <div class="code-text" id="scriptCode">loadstring(game:HttpGet("https://jiceo.vercel.app/loader.lua"))()</div>
-            </div>
-            <button class="copy-script-btn" onclick="copyScript()">
-                📋 COPY SCRIPT
-            </button>
-            <div style="margin-top: 30px; color: var(--text-secondary); font-size: 0.9rem;">
-                Nhấn copy để lấy script JICEO
-            </div>
-        </div>
-    </div>
-
-    <!-- Tab 2: Generator -->
-    <div id="generator-tab" class="tab-content">
-        <div class="key-container">
-            <div id="keyOutput" class="key-text">AWAITING COMMAND...</div>
-            <button id="copyBtn" class="copy-btn" onclick="copyKey()">📋 COPY KEY</button>
-        </div>
-        
-        <button class="btn-gen" id="genBtn">Generate Unique Key</button>
-    </div>
-
-    <!-- Tab 3: Status -->
-    <div id="status-tab" class="tab-content">
-        <div style="margin-bottom: 20px; text-align: left; display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: var(--neon); font-size: 1rem; font-weight: 600;">🔑 ACTIVE KEYS</span>
-            <span style="background: var(--gradient-1); padding: 5px 15px; border-radius: 50px; color: var(--bg-primary); font-weight: 700;">
-                <span id="total-keys">0</span>/10
-            </span>
-        </div>
-        
-        <div id="keyList" class="key-list">
-            <!-- Keys sẽ được hiển thị ở đây -->
-        </div>
-        
-        <div id="maxKeyWarning" class="max-key-warning">
-            ⚠️ Đã đạt giới hạn 10 key. Vui lòng xóa bớt để tạo key mới.
-        </div>
-    </div>
-
-    <!-- Tab 4: Chat -->
-    <div id="chat-tab" class="tab-content">
-        <div class="chat-wrapper">
-            <div class="auth-container" id="authContainer">
-                <div class="auth-form">
-                    <h3>WELCOME BACK</h3>
-                    <div class="auth-input-group">
-                        <input type="text" id="username" required>
-                        <label>Username</label>
-                    </div>
-                    <div class="auth-input-group">
-                        <input type="password" id="password" required>
-                        <label>Password</label>
-                    </div>
-                    <div class="auth-buttons">
-                        <button class="auth-btn login-btn" onclick="handleLogin()">Đăng nhập</button>
-                        <button class="auth-btn register-btn" onclick="handleRegister()">Đăng ký</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="chat-container" id="chatContainer">
-                <div class="chat-header">
-                    <div class="user-info">
-                        <div class="user-avatar" id="userAvatar"></div>
-                        <div class="user-details">
-                            <span class="user-name" id="currentUser"></span>
-                            <div class="user-status">
-                                <span class="status-dot"></span>
-                                Online
-                            </div>
-                        </div>
-                    </div>
-                    <button class="logout-btn" onclick="handleLogout()">
-                        <span>Đăng xuất</span>
-                    </button>
-                </div>
-                
-                <div class="chat-messages" id="chatMessages"></div>
-                
-                <div class="chat-input-area">
-                    <button class="emoji-btn" onclick="toggleEmoji()">😊</button>
-                    <div class="chat-input-wrapper">
-                        <input type="text" class="chat-input" id="chatInput" placeholder="Nhập tin nhắn..." onkeypress="handleKeyPress(event)">
-                    </div>
-                    <button class="send-btn" onclick="sendMessage()">
-                        <span>➤</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="status-bar">
-        <span>⚡ SYSTEM STATUS: </span>
-        <span id="db-count" style="color: var(--neon); font-weight: 600;">Connecting...</span>
-        <span style="margin-left: 10px;">⚡</span>
-    </div>
-</div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { getDatabase, ref, set, get, child, onValue, remove, push, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyAjGTZ_yr4p5OrDKSy80BLo6psSVAKLE0Q",
-        authDomain: "jiceo-73677.firebaseapp.com",
-        projectId: "jiceo-73677",
-        databaseURL: "https://jiceo-73677-default-rtdb.firebaseio.com",
-        storageBucket: "jiceo-73677.firebasestorage.app",
-        messagingSenderId: "542163832813",
-        appId: "1:542163832813:web:00d09dfa22ed9d49bb21e4"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // CẤU HÌNH TẠO KEY
-    const KEY_PREFIX = "JICEO_FUTURE_";
-    const TARGET_LENGTH = 40;
-    const MAX_KEYS = 10;
-
-    // Biến lưu keys hiện tại
-    let currentKeys = [];
-    let countdownIntervals = [];
-    let currentUser = null;
-
-    // Hàm hiển thị thông báo Succhal
-    function showSucchalNotification() {
-        const notification = document.getElementById('succhalNotification');
-        notification.classList.add('show');
-        
-        setTimeout(() => {
-            notification.classList.remove('show');
-        }, 3000);
-    }
-
-    // Hàm copy script
-    window.copyScript = function() {
-        const scriptText = document.getElementById('scriptCode').innerText;
-        navigator.clipboard.writeText(scriptText).then(() => {
-            showSucchalNotification();
-            
-            const copyBtn = document.querySelector('.copy-script-btn');
-            const originalText = copyBtn.innerText;
-            copyBtn.innerText = "✅ ĐÃ COPY!";
-            setTimeout(() => {
-                copyBtn.innerText = originalText;
-            }, 2000);
-        });
-    };
-
-    function generateRandomString(length) {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
-    }
-
-    // Format thời gian đếm ngược
-    function formatCountdown(expiresAt) {
-        const now = Date.now();
-        const diff = expiresAt - now;
-        
-        if (diff <= 0) return "Hết hạn";
-        
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        
-        return `⏳ ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-
-    // Cập nhật danh sách key
-    function updateKeyList() {
-        const keyListElement = document.getElementById('keyList');
-        const totalKeysElement = document.getElementById('total-keys');
-        const warningElement = document.getElementById('maxKeyWarning');
-        
-        totalKeysElement.innerText = currentKeys.length;
-        
-        if (currentKeys.length >= MAX_KEYS) {
-            warningElement.classList.add('active');
-        } else {
-            warningElement.classList.remove('active');
-        }
-        
-        countdownIntervals.forEach(interval => clearInterval(interval));
-        countdownIntervals = [];
-        
-        keyListElement.innerHTML = '';
-        
-        const sortedKeys = [...currentKeys].sort((a, b) => b.createdAt - a.createdAt);
-        
-        sortedKeys.forEach(keyData => {
-            const keyItem = document.createElement('div');
-            keyItem.className = 'key-item';
-            keyItem.id = `key-${keyData.key}`;
-            
-            const keyInfo = document.createElement('div');
-            keyInfo.className = 'key-info';
-            
-            const keyValue = document.createElement('span');
-            keyValue.className = 'key-value';
-            keyValue.innerText = keyData.key;
-            
-            const countdown = document.createElement('span');
-            countdown.className = 'countdown';
-            countdown.id = `countdown-${keyData.key}`;
-            
-            keyInfo.appendChild(keyValue);
-            keyInfo.appendChild(countdown);
-            
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.innerHTML = '🗑️';
-            deleteBtn.onclick = () => deleteKey(keyData.key);
-            
-            keyItem.appendChild(keyInfo);
-            keyItem.appendChild(deleteBtn);
-            
-            keyListElement.appendChild(keyItem);
-            
-            const updateCountdown = () => {
-                const countdownElement = document.getElementById(`countdown-${keyData.key}`);
-                if (countdownElement) {
-                    countdownElement.innerText = formatCountdown(keyData.expiresAt);
-                }
-            };
-            
-            updateCountdown();
-            const interval = setInterval(updateCountdown, 1000);
-            countdownIntervals.push(interval);
-        });
-    }
-
-    // Xóa key
-    window.deleteKey = async function(key) {
-        try {
-            await remove(ref(db, `global_keys/${key}`));
-        } catch (error) {
-            console.error('Lỗi khi xóa key:', error);
-        }
-    };
-
-    // Tạo key
-    window.generateKey = async function() {
-        const btn = document.getElementById('genBtn');
-        const output = document.getElementById('keyOutput');
-        const copyBtn = document.getElementById('copyBtn');
-        
-        if (currentKeys.length >= MAX_KEYS) {
-            alert(`⚠️ Đã đạt giới hạn ${MAX_KEYS} key. Vui lòng xóa bớt key cũ để tạo key mới.`);
-            return;
-        }
-        
-        btn.disabled = true;
-        btn.innerText = "⚡ SYNCHRONIZING... ⚡";
-
-        let finalKey = '';
-        let isUnique = false;
-
-        while (!isUnique) {
-            const randomPartLength = TARGET_LENGTH - KEY_PREFIX.length;
-            const candidate = KEY_PREFIX + generateRandomString(randomPartLength);
-            
-            const snapshot = await get(child(ref(db), `global_keys/${candidate}`));
-            if (!snapshot.exists()) {
-                finalKey = candidate;
-                isUnique = true;
-            }
-        }
-
-        const expiration = Date.now() + 86400000;
-        await set(ref(db, 'global_keys/' + finalKey), {
-            key: finalKey,
-            createdAt: Date.now(),
-            expiresAt: expiration
-        });
-
-        output.innerText = finalKey;
-        copyBtn.classList.add('active');
-        btn.disabled = false;
-        btn.innerText = "Generate Unique Key";
-        
-        switchTab('status');
-    };
-
-    // Copy key
-    window.copyKey = function() {
-        const text = document.getElementById('keyOutput').innerText;
-        navigator.clipboard.writeText(text).then(() => {
-            const copyBtn = document.getElementById('copyBtn');
-            copyBtn.innerText = "✅ COPIED!";
-            setTimeout(() => { copyBtn.innerText = "📋 COPY KEY"; }, 2000);
-        });
-    };
-
-    // ========== CHAT FUNCTIONS ==========
-    
-    window.handleRegister = async function() {
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value.trim();
-        
-        if (!username || !password) {
-            alert('Vui lòng nhập đầy đủ thông tin!');
-            return;
-        }
-        
-        if (password.length < 3) {
-            alert('Mật khẩu phải có ít nhất 3 ký tự!');
-            return;
-        }
-        
-        try {
-            const snapshot = await get(child(ref(db), `users/${username}`));
-            
-            if (snapshot.exists()) {
-                alert('Tên đăng nhập đã tồn tại!');
-                return;
-            }
-            
-            await set(ref(db, `users/${username}`), {
-                username: username,
-                password: password,
-                createdAt: Date.now(),
-                avatar: username.charAt(0).toUpperCase()
-            });
-            
-            alert('✅ Đăng ký thành công! Vui lòng đăng nhập.');
-        } catch (error) {
-            console.error('Lỗi đăng ký:', error);
-            alert('Có lỗi xảy ra khi đăng ký!');
-        }
-    };
-    
-    window.handleLogin = async function() {
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value.trim();
-        
-        if (!username || !password) {
-            alert('Vui lòng nhập đầy đủ thông tin!');
-            return;
-        }
-        
-        try {
-            const snapshot = await get(child(ref(db), `users/${username}`));
-            
-            if (!snapshot.exists()) {
-                alert('Tên đăng nhập không tồn tại!');
-                return;
-            }
-            
-            const userData = snapshot.val();
-            
-            if (userData.password !== password) {
-                alert('Mật khẩu không đúng!');
-                return;
-            }
-            
-            currentUser = username;
-            document.getElementById('authContainer').style.display = 'none';
-            document.getElementById('chatContainer').classList.add('active');
-            document.getElementById('currentUser').innerHTML = username;
-            document.getElementById('userAvatar').innerHTML = username.charAt(0).toUpperCase();
-            
-            loadMessages();
-            
-        } catch (error) {
-            console.error('Lỗi đăng nhập:', error);
-            alert('Có lỗi xảy ra khi đăng nhập!');
-        }
-    };
-    
-    window.handleLogout = function() {
-        currentUser = null;
-        document.getElementById('authContainer').style.display = 'block';
-        document.getElementById('chatContainer').classList.remove('active');
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-    };
-    
-    window.sendMessage = async function() {
-        const input = document.getElementById('chatInput');
-        const message = input.value.trim();
-        
-        if (!message || !currentUser) return;
-        
-        try {
-            const messagesRef = ref(db, 'messages');
-            const newMessageRef = push(messagesRef);
-            
-            await set(newMessageRef, {
-                username: currentUser,
-                message: message,
-                timestamp: Date.now()
-            });
-            
-            input.value = '';
-        } catch (error) {
-            console.error('Lỗi gửi tin nhắn:', error);
-        }
-    };
-    
-    window.handleKeyPress = function(event) {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            sendMessage();
-        }
-    };
-    
-    window.toggleEmoji = function() {
-        const input = document.getElementById('chatInput');
-        const emojis = ['😊', '😂', '❤️', '👍', '🎉', '🔥', '✨', '💯'];
-        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-        input.value += randomEmoji;
-        input.focus();
-    };
-    
-    function loadMessages() {
-        const messagesRef = query(ref(db, 'messages'), orderByChild('timestamp'), limitToLast(50));
-        
-        onValue(messagesRef, (snapshot) => {
-            const messagesDiv = document.getElementById('chatMessages');
-            messagesDiv.innerHTML = '';
-            
-            if (snapshot.exists()) {
-                const messages = [];
-                snapshot.forEach((childSnapshot) => {
-                    messages.push(childSnapshot.val());
-                });
-                
-                messages.sort((a, b) => a.timestamp - b.timestamp);
-                
-                messages.forEach(msg => {
-                    const isOwn = msg.username === currentUser;
-                    const messageWrapper = document.createElement('div');
-                    messageWrapper.className = `message-wrapper ${isOwn ? 'own-message' : 'other-message'}`;
-                    
-                    const messageBubble = document.createElement('div');
-                    messageBubble.className = 'message-bubble';
-                    
-                    const messageInfo = document.createElement('div');
-                    messageInfo.className = 'message-info';
-                    
-                    if (!isOwn) {
-                        const senderSpan = document.createElement('span');
-                        senderSpan.className = 'message-sender';
-                        senderSpan.textContent = msg.username;
-                        messageInfo.appendChild(senderSpan);
-                    }
-                    
-                    const timeSpan = document.createElement('span');
-                    timeSpan.className = 'message-time';
-                    const date = new Date(msg.timestamp);
-                    timeSpan.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    messageInfo.appendChild(timeSpan);
-                    
-                    const contentDiv = document.createElement('div');
-                    contentDiv.className = 'message-content';
-                    contentDiv.textContent = msg.message;
-                    
-                    messageBubble.appendChild(messageInfo);
-                    messageBubble.appendChild(contentDiv);
-                    messageWrapper.appendChild(messageBubble);
-                    
-                    messagesDiv.appendChild(messageWrapper);
-                });
-                
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }
-        });
-    }
-
-    // Switch tab
-    window.switchTab = function(tabName) {
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        
-        const tabs = ['script', 'generator', 'status', 'chat'];
-        const index = tabs.indexOf(tabName);
-        
-        if (index !== -1) {
-            document.querySelectorAll('.tab-btn')[index].classList.add('active');
-            document.getElementById(`${tabName}-tab`).classList.add('active');
-        }
-    };
-
-    // Theo dõi keys từ Firebase
-    onValue(ref(db, 'global_keys'), (snapshot) => {
-        const count = snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
-        document.getElementById('db-count').innerText = count + " ACTIVE";
-        
-        if (snapshot.exists()) {
-            const keys = snapshot.val();
-            currentKeys = Object.values(keys).filter(keyData => keyData.expiresAt > Date.now());
-            
-            Object.entries(keys).forEach(([key, keyData]) => {
-                if (keyData.expiresAt <= Date.now()) {
-                    remove(ref(db, `global_keys/${key}`));
-                }
-            });
-            
-            updateKeyList();
-        } else {
-            currentKeys = [];
-            updateKeyList();
-        }
-    });
-
-    document.getElementById('genBtn').addEventListener('click', generateKey);
-</script>
 
 </body>
 </html>
