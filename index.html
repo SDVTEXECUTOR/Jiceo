@@ -2,12 +2,13 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Family Guild Invite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Master Family | Guild Elite</title>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700;800&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        /* --- Phông chữ và Cài đặt cơ bản --- */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
         * {
             margin: 0;
             padding: 0;
@@ -16,151 +17,700 @@
 
         body, html {
             width: 100%;
-            height: 100%;
-            font-family: 'Inter', sans-serif;
-            overflow: hidden; /* Ngăn cuộn trang */
-            background-color: #050510; /* Màu nền tối sâu */
+            min-height: 100vh;
+            font-family: 'Inter', 'Orbitron', sans-serif;
+            background: #03030f;
+            overflow-x: hidden;
+            color: #f0f3ff;
         }
 
-        /* --- Vùng chứa chính (Căn giữa mọi thứ) --- */
-        .container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 2; /* Nằm trên lớp nền */
-            text-align: center;
-            color: #ffffff;
-            padding: 20px;
-        }
-
-        /* --- Lớp nền Hạt hạt chuyển động --- */
-        .background-particles {
-            position: absolute;
+        /* Canvas nền */
+        #particles-canvas {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            display: block;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 20% 30%, #04041a, #000000);
+        }
+
+        .ambient-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 180, 255, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+            pointer-events: none;
             z-index: 1;
-            /* Hiệu ứng gradient nền và hạt giả lập bằng background-image */
-            background: 
-                radial-gradient(circle at 10% 10%, rgba(0, 150, 255, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 90% 90%, rgba(150, 0, 255, 0.1) 0%, transparent 40%),
-                radial-gradient(white, rgba(255,255,255,.05) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 80px 80px;
-            animation: particleAnimation 60s linear infinite;
-            opacity: 0.6;
         }
 
-        @keyframes particleAnimation {
-            from { background-position: 0 0, 0 0, 0 0; }
-            to { background-position: 0 0, 0 0, 1000px 1000px; }
+        /* Thanh điều hướng */
+        .nav-tabs {
+            position: sticky;
+            top: 20px;
+            z-index: 50;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 20px auto 0;
+            width: fit-content;
+            background: rgba(10, 15, 35, 0.7);
+            backdrop-filter: blur(16px);
+            border-radius: 60px;
+            padding: 6px 18px;
+            border: 1px solid rgba(0, 212, 255, 0.35);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.3);
         }
 
-        /* --- Tiêu đề chính MASTER FAMILY | #1 (Hiệu ứng Neon) --- */
-        .title {
-            font-size: 3.5rem;
+        .tab-link {
+            padding: 10px 28px;
+            cursor: pointer;
             font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            color: #b9c3e6;
+            transition: 0.25s ease;
+            border-radius: 40px;
+            background: transparent;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #ffffff;
-            /* Hiệu ứng đổ bóng chữ neon phức tạp */
-            text-shadow: 
-                0 0 5px rgba(255, 255, 255, 0.8),
-                0 0 10px rgba(0, 200, 255, 0.6),
-                0 0 20px rgba(0, 200, 255, 0.4),
-                0 0 40px rgba(0, 200, 255, 0.2);
-            margin-bottom: 10px;
-            /* Hiệu ứng nhấp nháy nhẹ */
-            animation: titlePulse 3s ease-in-out infinite alternate;
+            font-family: 'Orbitron', monospace;
         }
 
-        @keyframes titlePulse {
-            from { opacity: 1; text-shadow: 0 0 5px rgba(255, 255, 255, 0.8), 0 0 10px rgba(0, 200, 255, 0.6); }
-            to { opacity: 0.9; text-shadow: 0 0 10px rgba(255, 255, 255, 1), 0 0 20px rgba(0, 200, 255, 0.8), 0 0 30px rgba(0, 200, 255, 0.6); }
+        .tab-link i {
+            margin-right: 8px;
+            font-size: 1rem;
         }
 
-        /* --- Dòng mô tả (Sub-title) --- */
-        .subtitle {
-            font-size: 1.1rem;
-            color: #b9bbbe; /* Màu xám nhẹ của Discord */
-            margin-bottom: 40px;
-            font-weight: 400;
+        .tab-link.active {
+            background: linear-gradient(135deg, #0099ff, #6a2eff);
+            color: white;
+            box-shadow: 0 0 12px #0099ff;
         }
 
-        /* --- Nút bấm KẾT NỐI NGAY --- */
-        .discord-btn {
-            display: inline-flex;
+        .main-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            min-height: 85vh;
+            display: none;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 15px 40px;
-            background: linear-gradient(135deg, #0077ff 0%, #00d4ff 100%);
-            border: none;
-            border-radius: 12px;
-            color: #ffffff;
+            padding: 40px 24px 80px;
+            animation: fadeSlide 0.5s ease-out;
+        }
+
+        .main-container.active {
+            display: flex;
+        }
+
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .glass-card {
+            background: rgba(12, 20, 35, 0.6);
+            backdrop-filter: blur(14px);
+            border-radius: 48px;
+            border: 1px solid rgba(0, 212, 255, 0.4);
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 200, 255, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .glass-card:hover {
+            box-shadow: 0 25px 45px rgba(0, 180, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .neon-title {
+            font-size: 3.8rem;
+            font-weight: 800;
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(135deg, #FFFFFF, #00e0ff, #b45eff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 8px rgba(0,212,255,0.4);
+            letter-spacing: 2px;
+            animation: softPulse 3s infinite alternate;
+        }
+
+        @keyframes softPulse {
+            0% { text-shadow: 0 0 3px cyan; opacity: 0.95; }
+            100% { text-shadow: 0 0 18px cyan; opacity: 1; }
+        }
+
+        .subtitle-glow {
+            font-size: 1.1rem;
+            color: #ccd6f6;
+            background: rgba(0,0,0,0.25);
+            padding: 6px 20px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+        }
+
+        .discord-hero-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(95deg, #5865F2, #00b8ff);
+            padding: 14px 38px;
+            border-radius: 80px;
+            font-weight: 800;
             font-size: 1.2rem;
-            font-weight: 600;
             text-decoration: none;
-            text-transform: uppercase;
+            color: white;
+            box-shadow: 0 6px 16px rgba(88, 101, 242, 0.4);
+            transition: all 0.25s;
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+
+        .discord-hero-btn i {
+            font-size: 1.7rem;
+        }
+
+        .discord-hero-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 24px rgba(0, 185, 255, 0.5);
+            background: linear-gradient(95deg, #4a56d4, #00aaff);
+        }
+
+        /* Form */
+        .form-card {
+            width: 100%;
+            max-width: 560px;
+            padding: 30px 26px;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+            font-size: 0.75rem;
             letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 20px rgba(0, 150, 255, 0.5); /* Đổ bóng phát sáng */
+            color: #7bc5ff;
+            text-transform: uppercase;
+        }
+
+        .input-group label i {
+            margin-right: 8px;
+        }
+
+        input, .file-label {
+            width: 100%;
+            padding: 12px 18px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1.5px solid rgba(0, 212, 255, 0.4);
+            border-radius: 32px;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            transition: 0.2s;
+            font-weight: 500;
+        }
+
+        input:focus {
+            border-color: #00e0ff;
+            box-shadow: 0 0 10px rgba(0, 224, 255, 0.4);
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .file-upload-area {
             position: relative;
-            overflow: hidden;
+            width: 100%;
+            cursor: pointer;
+        }
+        .file-upload-area input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            cursor: pointer;
+            z-index: 5;
+        }
+        .file-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 30, 50, 0.7);
+            cursor: pointer;
+            font-weight: 500;
+            pointer-events: none;
+        }
+        .file-label i {
+            font-size: 1.2rem;
+            color: #0af;
+        }
+        #preview-img {
+            margin-top: 12px;
+            max-width: 100%;
+            border-radius: 20px;
+            display: none;
+            border: 1px solid cyan;
+            box-shadow: 0 0 8px cyan;
+            max-height: 130px;
+            object-fit: cover;
         }
 
-        /* Hiệu ứng khi di chuột qua nút (Hover) */
-        .discord-btn:hover {
-            transform: translateY(-3px) scale(1.03);
-            box-shadow: 0 0 35px rgba(0, 150, 255, 0.8);
+        .apply-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(95deg, #00c3ff, #6a2cff);
+            border: none;
+            border-radius: 60px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-family: 'Orbitron', monospace;
         }
 
-        /* Hiệu ứng khi nhấn nút (Active) */
-        .discord-btn:active {
-            transform: translateY(-1px) scale(1);
+        .apply-btn:hover:not(:disabled) {
+            transform: scale(1.01);
+            box-shadow: 0 0 18px #00d4ff;
         }
 
-        /* Logo Discord bên trong nút */
-        .discord-icon {
-            margin-right: 12px;
-            width: 28px;
-            height: 28px;
-            fill: #ffffff; /* Màu logo trắng */
-            filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
+        .apply-btn:disabled {
+            opacity: 0.7;
+            cursor: wait;
         }
 
-        /* --- Dòng chữ dưới nút --- */
-        .footer-text {
+        #msg {
+            margin-top: 16px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.3);
+            padding: 8px;
+            border-radius: 40px;
+        }
+
+        .guild-stats {
+            display: flex;
+            gap: 24px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .stat-badge {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px);
+            padding: 8px 20px;
+            border-radius: 60px;
+            border: 1px solid rgba(0,212,255,0.4);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .stat-badge i {
+            color: #0af;
+            margin-right: 8px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 18px;
+            font-size: 0.7rem;
+            color: #6c86a3;
+            z-index: 20;
+            position: relative;
+        }
+
+        /* MODAL ĐẸP */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeInModal 0.2s ease;
+        }
+        @keyframes fadeInModal {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: rgba(20, 30, 55, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 48px;
+            padding: 32px 28px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid rgba(0, 212, 255, 0.7);
+            box-shadow: 0 0 40px rgba(0,212,255,0.3);
+        }
+        .modal-content i {
+            font-size: 4rem;
+            color: #00d4ff;
+            margin-bottom: 16px;
+        }
+        .modal-content h3 {
+            font-size: 1.9rem;
+            font-family: 'Orbitron', monospace;
+            margin-bottom: 12px;
+        }
+        .modal-content p {
+            margin-bottom: 24px;
+            color: #ccddf8;
+        }
+        .modal-btn {
+            background: linear-gradient(95deg, #5865F2, #00b8ff);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 60px;
+            color: white;
+            font-weight: bold;
             font-size: 1rem;
-            color: #8e9297;
-            margin-top: 15px;
-            font-weight: 400;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .modal-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 18px #00aaff;
         }
 
+        @media (max-width: 650px) {
+            .neon-title { font-size: 2.2rem; }
+            .stats-row { gap: 8px; }
+            .tab-link { padding: 7px 14px; font-size: 0.75rem; }
+            .nav-tabs { gap: 0.3rem; padding: 5px 12px; }
+            .discord-hero-btn { padding: 10px 22px; font-size: 1rem; }
+            .form-card { padding: 20px; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="background-particles"></div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="ambient-glow"></div>
 
-    <div class="container">
-        <h1 class="title">MASTER FAMILY | #1</h1>
-        
-        <p class="subtitle">Nếu bạn là thành viên Guild thì hãy vô Discord ngay nhé!</p>
-        
-        <a href="https://discord.gg/p7JeuXgRwX" class="discord-btn" target="_blank">
-            <svg class="discord-icon" viewBox="0 0 127.14 96.36">
-                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.71,32.65-1.87,56.6.38,80.1a105.77,105.77,0,0,0,32.63,16.26,77.7,77.7,0,0,0,6.89-11.11,64.8,64.8,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a64.59,64.59,0,0,1-10.85,5.18,77.39,77.39,0,0,0,6.89,11.11,105.2,105.2,0,0,0,32.63-16.26C129.58,52.86,124.4,28.9,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5.12-12.67,11.41-12.67S54,46,53.86,53,48.74,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.21,60,73.21,53s5.12-12.67,11.41-12.67S96,46,95.91,53,90.79,65.69,84.69,65.69Z"/>
-            </svg>
-            KẾT NỐI NGAY
-        </a>
-        
-        <p class="footer-text">Tham gia ngay Discord</p>
+    <nav class="nav-tabs">
+        <div class="tab-link active" onclick="openTab(event, 'tab-discord')">
+            <i class="fab fa-discord"></i> Cộng Đồng
+        </div>
+        <div class="tab-link" onclick="openTab(event, 'tab-xetduyet')">
+            <i class="fas fa-scroll"></i> Xét Duyệt
+        </div>
+    </nav>
+
+    <!-- TAB DISCORD -->
+    <div id="tab-discord" class="main-container active">
+        <div class="glass-card" style="padding: 35px 28px; max-width: 750px; text-align: center;">
+            <i class="fab fa-discord" style="font-size: 3.5rem; color: #5865F2; filter: drop-shadow(0 0 8px #5865F2);"></i>
+            <h1 class="neon-title" style="font-size: 2.8rem;">MASTER FAMILY</h1>
+            <p class="subtitle-glow" style="margin-top: 12px;">🏆 Guild tinh hoa | Bá chủ mọi đấu trường 🏆</p>
+            <div class="guild-stats">
+                <div class="stat-badge"><i class="fas fa-trophy"></i> Top #1</div>
+                <div class="stat-badge"><i class="fas fa-users"></i> 280+ Cao thủ</div>
+                <div class="stat-badge"><i class="fas fa-bolt"></i> Active 24/7</div>
+            </div>
+            <p style="margin: 16px 0 10px;">Kết nối ngay để nhận ưu đãi gia nhập và sự kiện độc quyền!</p>
+            <a href="https://discord.gg/p7JeuXgRwX" class="discord-hero-btn" target="_blank">
+                <i class="fab fa-discord"></i> GIA NHẬP NGAY
+            </a>
+            <p style="margin-top: 24px; font-size: 0.75rem; opacity: 0.7;"><i class="fas fa-shield-alt"></i> Hãy đọc nội quy sau khi vào server</p>
+        </div>
     </div>
 
+    <!-- TAB XÉT DUYỆT -->
+    <div id="tab-xetduyet" class="main-container">
+        <div class="glass-card form-card">
+            <h2 style="font-family: 'Orbitron'; font-size: 1.7rem; text-align: center; margin-bottom: 10px;">
+                <i class="fas fa-check-circle" style="color: #0af;"></i> ĐĂNG KÝ GUILD
+            </h2>
+            <p style="text-align: center; margin-bottom: 20px; font-size: 0.8rem;">Điền chính xác thông tin + ảnh chụp stats</p>
+
+            <div class="input-group">
+                <label><i class="fas fa-user-astronaut"></i> TÊN ROBLOX</label>
+                <input type="text" id="rbxName" placeholder="Nhập tên nhân vật" autocomplete="off">
+            </div>
+
+            <div class="stats-row">
+                <div class="input-group">
+                    <label><i class="fas fa-fist-raised"></i> DAME (%)</label>
+                    <input type="number" id="stDame" placeholder="Nhập số">
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-gem"></i> LUCKY</label>
+                    <input type="number" id="stLucky" placeholder="Nhập số">
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-crosshairs"></i> CRIT (%)</label>
+                    <input type="number" id="stCrit" placeholder="Nhập số">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label><i class="fas fa-camera"></i> ẢNH CHỤP STATS (minh chứng)</label>
+                <div class="file-upload-area">
+                    <input type="file" id="stImg" accept="image/*">
+                    <div class="file-label" id="fileLabel">
+                        <i class="fas fa-upload"></i> <span id="fileName">Chọn ảnh</span>
+                    </div>
+                </div>
+                <img id="preview-img" alt="preview stats">
+            </div>
+
+            <button class="apply-btn" id="applyBtn" onclick="sendToDiscord()">
+                <i class="fas fa-paper-plane"></i> GỬI ĐƠN XÉT DUYỆT
+            </button>
+            <div id="msg"></div>
+        </div>
+    </div>
+
+    <!-- MODAL THÔNG BÁO ĐỦ ĐIỀU KIỆN -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <i class="fab fa-discord"></i>
+            <h3>CHÚC MỪNG!</h3>
+            <p>Bạn đã đáp ứng đủ điều kiện gia nhập Master Family.<br>
+            Hãy tham gia Discord ngay để nhận thông báo và được cấp role chính thức.</p>
+            <button class="modal-btn" id="modalJoinBtn">🎉 THAM GIA DISCORD 🎉</button>
+        </div>
+    </div>
+
+    <footer>© 2025 MASTER FAMILY — Đỉnh cao quyền lực</footer>
+
+    <script>
+        // Particle nền nhẹ
+        const canvas = document.getElementById('particles-canvas');
+        let ctx = canvas.getContext('2d');
+        let particles = [];
+        let particleCount = 40;
+        let width, height;
+
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            initParticles();
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.2;
+                this.vy = (Math.random() - 0.5) * 0.15;
+                this.radius = Math.random() * 2 + 1;
+                this.alpha = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < -20) this.x = width + 20;
+                if (this.x > width + 20) this.x = -20;
+                if (this.y < -20) this.y = height + 20;
+                if (this.y > height + 20) this.y = -20;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(80, 190, 255, ${this.alpha})`;
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+        }
+
+        function drawLines() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distSq = dx * dx + dy * dy;
+                    if (distSq < 6400) {
+                        const dist = Math.sqrt(distSq);
+                        const opacity = (1 - dist / 80) * 0.2;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(0, 180, 230, ${opacity})`;
+                        ctx.lineWidth = 0.6;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, width, height);
+            for (let p of particles) { p.update(); p.draw(); }
+            drawLines();
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        animate();
+
+        // Tab logic
+        function openTab(evt, tabName) {
+            const containers = document.getElementsByClassName("main-container");
+            for (let i = 0; i < containers.length; i++) containers[i].classList.remove("active");
+            const tabs = document.getElementsByClassName("tab-link");
+            for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // File preview
+        const fileInput = document.getElementById('stImg');
+        const fileNameSpan = document.getElementById('fileName');
+        const previewImg = document.getElementById('preview-img');
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                fileNameSpan.innerText = file.name.length > 35 ? file.name.slice(0, 32) + '...' : file.name;
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    previewImg.src = event.target.result;
+                    previewImg.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                fileNameSpan.innerText = 'Chọn ảnh';
+                previewImg.style.display = 'none';
+            }
+        });
+
+        const webhookURL = "https://discord.com/api/webhooks/1496784615946457269/fP3t837E2koh3uD8mMSs-qDyMEGP9DwZ6TjTnpAGZmZ7K-oW6jVRGy574dgwgqqWe2f6";
+        const discordInvite = "https://discord.gg/p7JeuXgRwX";
+
+        // Ngưỡng ẩn
+        const HIDDEN_DAME = 850;
+        const HIDDEN_LUCKY = 290;
+        const HIDDEN_CRIT = 75;
+
+        async function sendToDiscord() {
+            const name = document.getElementById('rbxName').value.trim();
+            const dame = parseInt(document.getElementById('stDame').value);
+            const lucky = parseInt(document.getElementById('stLucky').value);
+            const crit = parseInt(document.getElementById('stCrit').value);
+            const file = fileInput.files[0];
+            const msgDiv = document.getElementById('msg');
+            const applyBtn = document.getElementById('applyBtn');
+
+            if (!name) {
+                msgDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Vui lòng nhập tên nhân vật!';
+                msgDiv.style.color = "#ffaa66";
+                return;
+            }
+            if (isNaN(dame) || isNaN(lucky) || isNaN(crit)) {
+                msgDiv.innerHTML = '<i class="fas fa-times-circle"></i> Nhập đầy đủ chỉ số Dame, Lucky, Crit!';
+                msgDiv.style.color = "#ff8888";
+                return;
+            }
+            if (!file) {
+                msgDiv.innerHTML = '<i class="fas fa-image"></i> Bạn cần tải lên ảnh chụp stats!';
+                msgDiv.style.color = "#ffaa66";
+                return;
+            }
+
+            // Kiểm tra điều kiện ẩn
+            const isQualified = (dame >= HIDDEN_DAME && lucky >= HIDDEN_LUCKY && crit >= HIDDEN_CRIT);
+
+            applyBtn.disabled = true;
+            applyBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Đang gửi...';
+            msgDiv.innerHTML = '<i class="fas fa-hourglass-half"></i> Xử lý đơn, vui lòng chờ...';
+            msgDiv.style.color = "#7bc5ff";
+
+            // Gửi webhook với embed đẹp hơn
+            const formData = new FormData();
+            const embed = {
+                title: isQualified ? "🏆 ĐƠN ĐẶC BIỆT | MASTER FAMILY 🏆" : "📝 ĐƠN ĐĂNG KÝ GUILD",
+                color: isQualified ? 0xff44cc : 0x00aaff,
+                fields: [
+                    { name: "👤 Ứng viên", value: `**${name}**`, inline: true },
+                    { name: "📊 CHỈ SỐ", value: `💥 Dame: **${dame}%**\n🍀 Lucky: **${lucky}**\n🎯 Crit: **${crit}%**`, inline: false },
+                    { name: "📌 Trạng thái", value: isQualified ? "✅ ĐẠT CHUẨN ẨN (HỘI ĐỦ ĐIỀU KIỆN)" : "⏳ Đã nhận đơn, chờ xét duyệt", inline: false }
+                ],
+                image: { url: "attachment://proof.png" },
+                timestamp: new Date().toISOString(),
+                footer: { text: "Master Family - Guild tinh hoa", icon_url: "https://cdn-icons-png.flaticon.com/512/906/906334.png" }
+            };
+            formData.append("payload_json", JSON.stringify({ embeds: [embed] }));
+            formData.append("file", file, "proof.png");
+
+            try {
+                await fetch(webhookURL, { method: "POST", body: formData });
+            } catch (err) { console.warn(err); }
+
+            // Luôn thông báo thành công
+            setTimeout(() => {
+                msgDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ Gửi đơn thành công! Admin sẽ xem xét và phản hồi sớm.';
+                msgDiv.style.color = "#6eff9e";
+                // Reset form
+                document.getElementById('rbxName').value = '';
+                document.getElementById('stDame').value = '';
+                document.getElementById('stLucky').value = '';
+                document.getElementById('stCrit').value = '';
+                fileInput.value = '';
+                fileNameSpan.innerText = 'Chọn ảnh';
+                previewImg.style.display = 'none';
+                applyBtn.disabled = false;
+                applyBtn.innerHTML = '<i class="fas fa-paper-plane"></i> GỬI ĐƠN XÉT DUYỆT';
+
+                // Nếu đủ điều kiện ẩn -> hiện modal mời vào Discord
+                if (isQualified) {
+                    const modal = document.getElementById('successModal');
+                    modal.style.display = 'flex';
+                }
+            }, 1300);
+        }
+
+        // Xử lý modal: click OK chuyển đến Discord
+        const modal = document.getElementById('successModal');
+        const modalBtn = document.getElementById('modalJoinBtn');
+        modalBtn.addEventListener('click', () => {
+            window.open(discordInvite, '_blank');
+            modal.style.display = 'none';
+        });
+        // Đóng modal nếu click ra ngoài nội dung (tuỳ chọn)
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+
+        // Ngăn nhập ký tự lạ trong number
+        document.querySelectorAll('input[type="number"]').forEach(inp => {
+            inp.addEventListener('keydown', (e) => {
+                if (e.key === 'e' || e.key === 'E' || e.key === '-' || e.key === '+') e.preventDefault();
+            });
+        });
+    </script>
 </body>
 </html>
